@@ -68,9 +68,9 @@ classDiagram
     class Tarefa {
         -titulo: String
         -descricao: String
-        -dataInicioReal: LocalDate
+        -dataInicioReal: LocalDateTime
         -dataTerminoPrevista: LocalDate
-        -dataTerminoReal: LocalDate
+        -dataTerminoReal: LocalDateTime
         -status: StatusTarefa
         -prioridade: Prioridade
         -responsavel: Usuario
