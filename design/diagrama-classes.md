@@ -21,9 +21,14 @@ classDiagram
         +getEmail() String
         +getCargo() String
         +getLogin() String
+        +setNome(nome: String) void
+        +setEmail(email: String) void
+        +setCargo(cargo: String) void
+        +setSenha(senha: String) void
         +conferirSenha(tentativa: String) boolean
         +permissoes() String*
     }
+
 
     class Administrador {
         +permissoes() String
