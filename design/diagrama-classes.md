@@ -16,15 +16,6 @@ classDiagram
         -cargo: String
         -login: String
         -senha: String
-        +getNome() String
-        +getCpf() String
-        +getEmail() String
-        +getCargo() String
-        +getLogin() String
-        +setNome(nome: String) void
-        +setEmail(email: String) void
-        +setCargo(cargo: String) void
-        +setSenha(senha: String) void
         +conferirSenha(tentativa: String) boolean
         +permissoes() String*
     }
@@ -79,10 +70,11 @@ classDiagram
         -status: StatusTarefa
         -prioridade: Prioridade
         -responsavel: Usuario
-        +getTitulo() String
         +atribuirResponsavel(u: Usuario) void
+        +removerResponsavel() void
         +iniciar() void
         +concluir() void
+        +reabrir() void
     }
 
     class StatusProjeto {
