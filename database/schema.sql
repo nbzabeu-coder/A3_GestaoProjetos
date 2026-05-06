@@ -79,8 +79,10 @@ CREATE TABLE tarefa (
     status       ENUM('PENDENTE', 'EM_ANDAMENTO', 'CONCLUIDA') NOT NULL,
     prioridade   ENUM('BAIXA', 'MEDIA', 'ALTA') NOT NULL,
     projeto_id            INT           NOT NULL,
+    equipe_id             INT           NOT NULL,
     responsavel_id        INT           NULL,
     FOREIGN KEY (projeto_id)     REFERENCES projeto(id),
+    FOREIGN KEY (equipe_id)      REFERENCES equipe(id),
     FOREIGN KEY (responsavel_id) REFERENCES usuario(id)
 );
 

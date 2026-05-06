@@ -1,3 +1,5 @@
+// Package: organiza a classe dentro da estrutura de pastas do projeto 
+// (domínio reverso)
 package com.gestaoprojetos.model;
 
 // Herança: Colaborador é um tipo específico de Usuario,
