@@ -15,11 +15,12 @@ public class Tarefa {
     private LocalDate dataTerminoPrevista;
     private StatusTarefa status;
     private Prioridade prioridade;
+    private Equipe equipe;
     private Usuario responsavel;
 
     // Construtor: inicializa os atributos essenciais da tarefa
     public Tarefa(String titulo, LocalDate dataTerminoPrevista,
-                  Prioridade prioridade) {
+                  Prioridade prioridade, Equipe equipe) {
         if (titulo == null || titulo.isBlank()) {
             throw new IllegalArgumentException("Título é obrigatório");
         }
@@ -29,9 +30,13 @@ public class Tarefa {
         if (prioridade == null) {
             throw new IllegalArgumentException("Prioridade é obrigatória");
         }
+        if (equipe == null) {
+            throw new IllegalArgumentException("Equipe é obrigatória");
+        }
         this.titulo = titulo;
         this.dataTerminoPrevista = dataTerminoPrevista;
         this.prioridade = prioridade;
+        this.equipe = equipe;
         this.status = StatusTarefa.PENDENTE; // Toda tarefa começa com status PENDENTE
     }
 
@@ -58,6 +63,9 @@ public class Tarefa {
     }
     public Prioridade getPrioridade() {
         return this.prioridade;
+    }
+    public Equipe getEquipe() {
+        return this.equipe;
     }
     public Usuario getResponsavel() {
         return this.responsavel;
@@ -114,6 +122,9 @@ public class Tarefa {
     public void atribuirResponsavel(Usuario responsavel) {
         if (responsavel == null) {
             throw new IllegalArgumentException("Responsável é obrigatório");
+        }
+        if (!this.equipe.listarMembros().contains(responsavel)) {
+            throw new IllegalArgumentException("Responsável deve ser membro da equipe da tarefa");
         }
         this.responsavel = responsavel;
     }

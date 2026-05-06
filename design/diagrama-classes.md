@@ -69,6 +69,7 @@ classDiagram
         -dataTerminoReal: LocalDateTime
         -status: StatusTarefa
         -prioridade: Prioridade
+        -equipe: Equipe
         -responsavel: Usuario
         +atribuirResponsavel(u: Usuario) void
         +removerResponsavel() void
@@ -128,6 +129,7 @@ Relatorio <|.. RelatorioDeProjeto
 Relatorio <|.. RelatorioDeEquipe
 Relatorio <|.. RelatorioDeColaborador
 Tarefa "*" --> "0..1" Usuario : responsavel
+Tarefa "*" --> "1" Equipe : pertence
 Projeto "*" --> "1" Gerente : associação
 Projeto "1" *-- "*" Tarefa : composição
 Projeto "*" o-- "*" Equipe : agregação

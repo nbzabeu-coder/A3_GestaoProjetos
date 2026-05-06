@@ -45,6 +45,7 @@ erDiagram
         enum status
         enum prioridade
         int projeto_id FK
+        int equipe_id FK
         int responsavel_id FK
     }
 
@@ -60,6 +61,7 @@ erDiagram
 
     USUARIO ||--o{ PROJETO : "gerencia"
     PROJETO ||--o{ TAREFA : "contém"
+    EQUIPE ||--o{ TAREFA : "pertence"
     USUARIO |o--o{ TAREFA : "responsável"
     EQUIPE ||--o{ EQUIPE_MEMBRO : "tem"
     USUARIO ||--o{ EQUIPE_MEMBRO : "participa"
