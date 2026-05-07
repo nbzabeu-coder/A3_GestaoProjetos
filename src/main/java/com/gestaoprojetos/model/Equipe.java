@@ -62,8 +62,8 @@ public class Equipe {
         this.membros.add(membro);
     }
     public void removerMembro(Usuario membro) {
-        if (membro != null) {
-            throw new IllegalArgumentException("Selecionar membro para remover");
+        if (membro == null) {
+            throw new IllegalArgumentException("Membro não pode ser nulo");
         }
         this.membros.remove(membro);
     }
