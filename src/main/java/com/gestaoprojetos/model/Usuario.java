@@ -8,6 +8,7 @@ package com.gestaoprojetos.model;
 public abstract class Usuario {
 
     // Declaração dos atributos privados (encapsulamento — só a classe enxerga)
+    private int id;
     private String nome;
     private String cpf;
     private String email;
@@ -53,6 +54,9 @@ public abstract class Usuario {
 
     // Getters: dão acesso de leitura aos atributos privados,
     // mantendo o encapsulamento (os atributos continuam protegidos)
+    public int getId() {
+    return this.id;
+    }
     public String getNome() {
         return this.nome;
     }
@@ -68,9 +72,19 @@ public abstract class Usuario {
     public String getLogin() {
         return this.login;
     }
+    // Acesso à senha — uso restrito à camada de persistência (UsuarioDAO).
+    // Este getter foi adicionado para viabilizar o mapeamento Java -> SQL.
+    // Outras partes do sistema devem usar conferirSenha(tentativa) para validação.
+    public String getSenha() {
+        return this.senha;
+    }
+
 
     // Setters: alteram os valores dos atributos depois da criação,
     // sempre validando o novo valor (mesma regra do construtor)
+    public void setId(int id) { //Sem validação no setter — é "uso interno" pelo DAO depois que o banco gera o id.
+    this.id = id;
+    }
     public void setNome(String nome) {
         if (nome == null || nome.isBlank()) {
             throw new IllegalArgumentException("Nome é obrigatório");

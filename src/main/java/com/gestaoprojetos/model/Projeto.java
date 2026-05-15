@@ -40,8 +40,7 @@ public class Projeto {
         }
         // Validação de lógica de datas: a data de início prevista não pode ser posterior à data de término prevista
         if (dataInicioPrevista.isAfter(dataTerminoPrevista)) {
-            throw new IllegalArgumentException(
-        "Data de início prevista não pode ser posterior à data de término prevista");
+            throw new IllegalArgumentException("Data de início prevista não pode ser posterior à data de término prevista");
         }
         // Atribuição dos valores aos atributos do projeto
         this.nome = nome;
@@ -100,9 +99,9 @@ public class Projeto {
             throw new IllegalArgumentException("Data de início prevista é obrigatória");
         }
         if (this.dataTerminoPrevista != null 
-            && dataInicioPrevista.isAfter(this.dataTerminoPrevista)) {
-                throw new IllegalArgumentException("Data de início prevista não pode ser posterior à data de término prevista");
-            }
+        && dataInicioPrevista.isAfter(this.dataTerminoPrevista)) {
+            throw new IllegalArgumentException("Data de início prevista não pode ser posterior à data de término prevista");
+        }
         this.dataInicioPrevista = dataInicioPrevista;
     }
     public void setDataTerminoPrevista(LocalDate dataTerminoPrevista) {
@@ -110,9 +109,9 @@ public class Projeto {
             throw new IllegalArgumentException("Data de término prevista é obrigatória");
         }
         if (this.dataInicioPrevista != null 
-            && dataTerminoPrevista.isBefore(this.dataInicioPrevista)) {
-                throw new IllegalArgumentException("Data de término prevista não pode ser anterior à data de início prevista");
-            }
+        && dataTerminoPrevista.isBefore(this.dataInicioPrevista)) {
+            throw new IllegalArgumentException("Data de término prevista não pode ser anterior à data de início prevista");
+        }
         this.dataTerminoPrevista = dataTerminoPrevista;
     }
     public void setGerente(Gerente gerente) {
