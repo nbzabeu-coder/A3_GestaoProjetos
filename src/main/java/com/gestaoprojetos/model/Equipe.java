@@ -11,6 +11,7 @@ import java.util.List;
 public class Equipe {
 
     //Declarando os atributos da classe Equipe
+    private int id;
     private String nome;
     private String descricao;
     private List<Usuario> membros; // Lista de membros da equipe
@@ -27,6 +28,9 @@ public class Equipe {
     //Getters: leem os valores dos atributos da equipe
     // O getter de membros retorna a lista completa de membros da equipe
     // (pode ser vazia se ainda não houver membros adicionados)
+    public int getId() {
+        return this.id;
+    }
     public String getNome() {
         return this.nome;
     }
@@ -40,6 +44,9 @@ public class Equipe {
 
     //Setters: alteram apenas os atributos editáveis pelo cliente 
     //(no caso, nome e descrição da equipe)
+    public void setId(int id) {
+        this.id = id;
+    }
     public void setDescricao(String descricao) {
         this.descricao = descricao;
     }
