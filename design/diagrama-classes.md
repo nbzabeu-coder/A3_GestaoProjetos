@@ -10,6 +10,7 @@ classDiagram
 
     class Usuario {
         <<abstract>>
+        -id: int
         -nome: String
         -cpf: String
         -email: String
@@ -34,6 +35,7 @@ classDiagram
     }
 
     class Projeto {
+        -id: int
         -nome: String
         -descricao: String
         -dataInicioPrevista: LocalDate
@@ -53,6 +55,7 @@ classDiagram
     }
 
     class Equipe {
+        -id: int
         -nome: String
         -descricao: String
         -membros: List~Usuario~
@@ -62,6 +65,7 @@ classDiagram
     }
 
     class Tarefa {
+        -id: int
         -titulo: String
         -descricao: String
         -dataInicioReal: LocalDateTime
@@ -71,6 +75,7 @@ classDiagram
         -prioridade: Prioridade
         -equipe: Equipe
         -responsavel: Usuario
+        -projetoId: int
         +atribuirResponsavel(u: Usuario) void
         +removerResponsavel() void
         +iniciar() void
