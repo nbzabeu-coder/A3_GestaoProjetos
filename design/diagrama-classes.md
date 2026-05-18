@@ -126,6 +126,23 @@ classDiagram
         +exportar(formato: String) void
     }
 
+    class RuntimeException {
+        <<Java>>
+    }
+
+    class GestaoProjetosException {
+        <<abstract>>
+    }
+
+    class CampoObrigatorioException {
+    }
+
+    class TransicaoInvalidaException {
+    }
+
+    class RegraDeNegocioException {
+    }
+
 
 Usuario <|-- Administrador
 Usuario <|-- Gerente
@@ -142,5 +159,9 @@ Equipe "*" o-- "*" Usuario : membros
 Projeto ..> StatusProjeto
 Tarefa ..> StatusTarefa
 Tarefa ..> Prioridade
+RuntimeException <|-- GestaoProjetosException
+GestaoProjetosException <|-- CampoObrigatorioException
+GestaoProjetosException <|-- TransicaoInvalidaException
+GestaoProjetosException <|-- RegraDeNegocioException
 
 ```

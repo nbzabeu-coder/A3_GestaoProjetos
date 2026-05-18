@@ -5,6 +5,9 @@ package com.gestaoprojetos.model;
 //Importando do java.util para usar as classes de coleção, como List e ArrayList
 import java.util.ArrayList;
 import java.util.List;
+//Importando as classes de exceção personalizadas para tratar erros específicos do domínio
+import com.gestaoprojetos.exception.CampoObrigatorioException;
+import com.gestaoprojetos.exception.RegraDeNegocioException;
 
 //Classe Equipe: representa a equipe de um (ou mais) projeto(s),
 // composta por membros (usuários)
@@ -19,7 +22,7 @@ public class Equipe {
     //Construtor: inicializa os atributos essenciais da equipe
     public Equipe(String nome) {
         if (nome == null || nome.isBlank()) {
-            throw new IllegalArgumentException("Nome da equipe é obrigatório");
+            throw new CampoObrigatorioException("Nome da equipe é obrigatório");
         }
         this.nome = nome;
         this.membros = new ArrayList<>(); // Inicializa a lista de membros vazia
@@ -52,7 +55,7 @@ public class Equipe {
     }
     public void setNome(String nome) {
         if (nome == null || nome.isBlank()) {
-            throw new IllegalArgumentException("Nome da equipe é obrigatório");
+            throw new CampoObrigatorioException("Nome da equipe é obrigatório");
         }
         this.nome = nome;
     }
@@ -61,16 +64,16 @@ public class Equipe {
     // remover membros
     public void adicionarMembro(Usuario membro) {
         if (membro == null) {
-            throw new IllegalArgumentException("Membro não pode ser nulo");
+            throw new CampoObrigatorioException("Membro não pode ser nulo");
         }
         if (this.membros.contains(membro)) {
-            throw new IllegalStateException("Membro já está na equipe");
+            throw new RegraDeNegocioException("Membro já está na equipe");
         }
         this.membros.add(membro);
     }
     public void removerMembro(Usuario membro) {
         if (membro == null) {
-            throw new IllegalArgumentException("Membro não pode ser nulo");
+            throw new CampoObrigatorioException("Membro não pode ser nulo");
         }
         this.membros.remove(membro);
     }

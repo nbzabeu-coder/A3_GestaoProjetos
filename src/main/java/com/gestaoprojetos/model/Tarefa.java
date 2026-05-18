@@ -6,6 +6,11 @@ package com.gestaoprojetos.model;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+// Importando classes de exceção personalizadas para validação de regras de negócio
+import com.gestaoprojetos.exception.CampoObrigatorioException;
+import com.gestaoprojetos.exception.TransicaoInvalidaException;
+import com.gestaoprojetos.exception.RegraDeNegocioException;
+
 // Classe tarefa: representa as tarefas que compõem um projeto
 public class Tarefa {
     private int id;
@@ -24,19 +29,19 @@ public class Tarefa {
     public Tarefa(String titulo, LocalDate dataTerminoPrevista,
             Prioridade prioridade, Equipe equipe, int projetoId) {
         if (projetoId <= 0) {
-            throw new IllegalArgumentException("Projeto é obrigatório");
+            throw new CampoObrigatorioException("Projeto é obrigatório");
         }
         if (titulo == null || titulo.isBlank()) {
-            throw new IllegalArgumentException("Título é obrigatório");
+            throw new CampoObrigatorioException("Título é obrigatório");
         }
         if (dataTerminoPrevista == null) {
-            throw new IllegalArgumentException("Data de término prevista é obrigatória");
+            throw new CampoObrigatorioException("Data de término prevista é obrigatória");
         }
         if (prioridade == null) {
-            throw new IllegalArgumentException("Prioridade é obrigatória");
+            throw new CampoObrigatorioException("Prioridade é obrigatória");
         }
         if (equipe == null) {
-            throw new IllegalArgumentException("Equipe é obrigatória");
+            throw new CampoObrigatorioException("Equipe é obrigatória");
         }
         this.titulo = titulo;
         this.dataTerminoPrevista = dataTerminoPrevista;
@@ -126,7 +131,7 @@ public class Tarefa {
 
     public void setTitulo(String titulo) {
         if (titulo == null || titulo.isBlank()) {
-            throw new IllegalArgumentException("Título é obrigatório");
+            throw new CampoObrigatorioException("Título é obrigatório");
         }
         this.titulo = titulo;
     }
@@ -137,14 +142,14 @@ public class Tarefa {
 
     public void setDataTerminoPrevista(LocalDate dataTerminoPrevista) {
         if (dataTerminoPrevista == null) { // isBlank só se aplica a String
-            throw new IllegalArgumentException("Data de término prevista é obrigatória");
+            throw new CampoObrigatorioException("Data de término prevista é obrigatória");
         }
         this.dataTerminoPrevista = dataTerminoPrevista;
     }
 
     public void setPrioridade(Prioridade prioridade) {
         if (prioridade == null) {
-            throw new IllegalArgumentException("Prioridade é obrigatória");
+            throw new CampoObrigatorioException("Prioridade é obrigatória");
         }
         this.prioridade = prioridade;
     }
@@ -154,7 +159,7 @@ public class Tarefa {
     // executar.
     public void iniciar() {
         if (this.status != StatusTarefa.PENDENTE) {
-            throw new IllegalStateException("Só é possível iniciar uma tarefa que esteja PENDENTE");
+            throw new TransicaoInvalidaException("Só é possível iniciar uma tarefa que esteja PENDENTE");
         }
         this.status = StatusTarefa.EM_ANDAMENTO;
         this.dataInicioReal = LocalDateTime.now(); // Registra a data e hora de início
@@ -162,7 +167,7 @@ public class Tarefa {
 
     public void concluir() {
         if (this.status != StatusTarefa.EM_ANDAMENTO) {
-            throw new IllegalStateException("Só é possível concluir uma tarefa que esteja EM ANDAMENTO");
+            throw new TransicaoInvalidaException("Só é possível concluir uma tarefa que esteja EM ANDAMENTO");
         }
         this.status = StatusTarefa.CONCLUIDA;
         this.dataTerminoReal = LocalDateTime.now(); // Registra a data e hora de término
@@ -170,7 +175,7 @@ public class Tarefa {
 
     public void reabrir() {
         if (this.status != StatusTarefa.CONCLUIDA) {
-            throw new IllegalStateException("Só é possível reabrir uma tarefa que esteja CONCLUIDA");
+            throw new TransicaoInvalidaException("Só é possível reabrir uma tarefa que esteja CONCLUIDA");
         }
         this.status = StatusTarefa.EM_ANDAMENTO; // Reabre a tarefa, voltando para EM_ANDAMENTO
         this.dataTerminoReal = null; // Limpa a data de término real, pois a tarefa volta a estar em andamento
@@ -178,10 +183,10 @@ public class Tarefa {
 
     public void atribuirResponsavel(Usuario responsavel) {
         if (responsavel == null) {
-            throw new IllegalArgumentException("Responsável é obrigatório");
+            throw new CampoObrigatorioException("Responsável é obrigatório");
         }
         if (!this.equipe.listarMembros().contains(responsavel)) {
-            throw new IllegalArgumentException("Responsável deve ser membro da equipe da tarefa");
+            throw new RegraDeNegocioException("Responsável deve ser membro da equipe da tarefa");
         }
         this.responsavel = responsavel;
     }

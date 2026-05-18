@@ -9,6 +9,11 @@ import java.util.List;
 // Importando classes para manipulação de datas
 import java.time.LocalDate;
 
+// Importando classes de exceção personalizadas para tratar erros específicos do domínio
+import com.gestaoprojetos.exception.CampoObrigatorioException;
+import com.gestaoprojetos.exception.TransicaoInvalidaException;
+import com.gestaoprojetos.exception.RegraDeNegocioException;
+
 //Classe Projeto: representa um projeto, que pode ter uma equipe associada,
 // um gerente responsável, e outras informações relevantes como nome, descrição, etc.
 public class Projeto {
@@ -29,21 +34,21 @@ public class Projeto {
         // Validações de null - tendo certeza que os dados essenciais para criar um
         // projeto estão presentes
         if (nome == null || nome.isBlank()) {
-            throw new IllegalArgumentException("Nome do projeto é obrigatório");
+            throw new CampoObrigatorioException("Nome do projeto é obrigatório");
         }
         if (dataInicioPrevista == null) {
-            throw new IllegalArgumentException("Data de início prevista é obrigatória");
+            throw new CampoObrigatorioException("Data de início prevista é obrigatória");
         }
         if (dataTerminoPrevista == null) {
-            throw new IllegalArgumentException("Data de término prevista é obrigatória");
+            throw new CampoObrigatorioException("Data de término prevista é obrigatória");
         }
         if (gerente == null) {
-            throw new IllegalArgumentException("Gerente é obrigatório");
+            throw new CampoObrigatorioException("Gerente é obrigatório");
         }
         // Validação de lógica de datas: a data de início prevista não pode ser
         // posterior à data de término prevista
         if (dataInicioPrevista.isAfter(dataTerminoPrevista)) {
-            throw new IllegalArgumentException(
+            throw new RegraDeNegocioException(
                     "Data de início prevista não pode ser posterior à data de término prevista");
         }
         // Atribuição dos valores aos atributos do projeto
@@ -127,7 +132,7 @@ public class Projeto {
 
     public void setNome(String nome) {
         if (nome == null || nome.isBlank()) {
-            throw new IllegalArgumentException("Nome do projeto é obrigatório");
+            throw new CampoObrigatorioException("Nome do projeto é obrigatório");
         }
         this.nome = nome;
     }
@@ -138,11 +143,11 @@ public class Projeto {
 
     public void setDataInicioPrevista(LocalDate dataInicioPrevista) {
         if (dataInicioPrevista == null) {
-            throw new IllegalArgumentException("Data de início prevista é obrigatória");
+            throw new CampoObrigatorioException("Data de início prevista é obrigatória");
         }
         if (this.dataTerminoPrevista != null
                 && dataInicioPrevista.isAfter(this.dataTerminoPrevista)) {
-            throw new IllegalArgumentException(
+            throw new RegraDeNegocioException(
                     "Data de início prevista não pode ser posterior à data de término prevista");
         }
         this.dataInicioPrevista = dataInicioPrevista;
@@ -150,11 +155,11 @@ public class Projeto {
 
     public void setDataTerminoPrevista(LocalDate dataTerminoPrevista) {
         if (dataTerminoPrevista == null) {
-            throw new IllegalArgumentException("Data de término prevista é obrigatória");
+            throw new CampoObrigatorioException("Data de término prevista é obrigatória");
         }
         if (this.dataInicioPrevista != null
                 && dataTerminoPrevista.isBefore(this.dataInicioPrevista)) {
-            throw new IllegalArgumentException(
+            throw new RegraDeNegocioException(
                     "Data de término prevista não pode ser anterior à data de início prevista");
         }
         this.dataTerminoPrevista = dataTerminoPrevista;
@@ -162,7 +167,7 @@ public class Projeto {
 
     public void setGerente(Gerente gerente) {
         if (gerente == null) {
-            throw new IllegalArgumentException("Gerente é obrigatório");
+            throw new CampoObrigatorioException("Gerente é obrigatório");
         }
         this.gerente = gerente;
     }
@@ -171,7 +176,7 @@ public class Projeto {
     // ou equipes
     public void iniciar() {
         if (this.status != StatusProjeto.PLANEJADO) {
-            throw new IllegalStateException("Só é possível iniciar um projeto que esteja PLANEJADO");
+            throw new TransicaoInvalidaException("Só é possível iniciar um projeto que esteja PLANEJADO");
         }
         this.status = StatusProjeto.EM_ANDAMENTO;
         this.dataInicioReal = LocalDate.now(); // Define a data de início real como a data atual
@@ -179,7 +184,7 @@ public class Projeto {
 
     public void concluir() {
         if (this.status != StatusProjeto.EM_ANDAMENTO) {
-            throw new IllegalStateException("Só é possível concluir um projeto que esteja EM_ANDAMENTO");
+            throw new TransicaoInvalidaException("Só é possível concluir um projeto que esteja EM_ANDAMENTO");
         }
         this.status = StatusProjeto.CONCLUIDO;
         this.dataTerminoReal = LocalDate.now(); // Define a data de término real como a data atual
@@ -188,7 +193,7 @@ public class Projeto {
     public void cancelar() {
         if (this.status != StatusProjeto.PLANEJADO
                 && this.status != StatusProjeto.EM_ANDAMENTO) {
-            throw new IllegalStateException("Só é possível cancelar um projeto PLANEJADO ou EM_ANDAMENTO");
+            throw new TransicaoInvalidaException("Só é possível cancelar um projeto PLANEJADO ou EM_ANDAMENTO");
         }
         this.status = StatusProjeto.CANCELADO;
         this.dataTerminoReal = LocalDate.now(); // Define a data de término real como a data atual
@@ -196,25 +201,25 @@ public class Projeto {
 
     public void adicionarEquipe(Equipe equipe) {
         if (equipe == null) {
-            throw new IllegalArgumentException("Equipe não pode ser nula");
+            throw new CampoObrigatorioException("Equipe não pode ser nula");
         }
         if (this.equipes.contains(equipe)) {
-            throw new IllegalStateException("Equipe já está associada a este projeto");
+            throw new RegraDeNegocioException("Equipe já está associada a este projeto");
         }
         this.equipes.add(equipe); // Adiciona a equipe à LISTA de equipes associadas ao projeto
     }
 
     public void adicionarTarefa(Tarefa tarefa) {
         if (tarefa == null) {
-            throw new IllegalArgumentException("Tarefa não pode ser nula");
+            throw new CampoObrigatorioException("Tarefa não pode ser nula");
         }
         // Validação importante: a equipe responsável pela tarefa deve estar associada a
         // este projeto
         if (!this.equipes.contains(tarefa.getEquipe())) {
-            throw new IllegalStateException("A equipe da tarefa não está alocada a este projeto");
+            throw new RegraDeNegocioException("A equipe da tarefa não está alocada a este projeto");
         }
         if (this.tarefas.contains(tarefa)) {
-            throw new IllegalStateException("Tarefa já está adicionada ao projeto");
+            throw new RegraDeNegocioException("Tarefa já está adicionada ao projeto");
         }
         this.tarefas.add(tarefa); // Adiciona a tarefa à LISTA de tarefas do projeto
     }
