@@ -37,6 +37,16 @@ public class TarefaController {
     public List<Tarefa> listarPorProjeto(int projetoId) {
         return tarefaDAO.listarPorProjeto(projetoId);
     }
+    
+    // READ: lista as tarefas atribuídas a uma equipe específica
+    public List<Tarefa> listarPorEquipe(int equipeId) {
+        return tarefaDAO.listarPorEquipe(equipeId);
+    }
+
+    // READ: lista as tarefas cujo responsável é um usuário específico
+    public List<Tarefa> listarPorResponsavel(int usuarioId) {
+        return tarefaDAO.listarPorResponsavel(usuarioId);
+    }
 
     // UPDATE: atualiza os dados de uma tarefa existente
     public void atualizar(Tarefa tarefa) {

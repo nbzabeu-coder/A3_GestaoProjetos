@@ -131,6 +131,51 @@ public class TarefaDAO {
 
         return tarefas;
     }
+        // READ: lista as tarefas atribuídas a uma equipe específica
+    public List<Tarefa> listarPorEquipe(int equipeId) {
+        String sql = "SELECT * FROM tarefa WHERE equipe_id = ?";
+        List<Tarefa> tarefas = new ArrayList<>();
+
+        try (Connection conn = ConexaoMySQL.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, equipeId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    tarefas.add(montarTarefa(rs));
+                }
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao listar tarefas da equipe", e);
+        }
+
+        return tarefas;
+    }
+
+    // READ: lista as tarefas cujo responsável é um usuário específico
+    public List<Tarefa> listarPorResponsavel(int usuarioId) {
+        String sql = "SELECT * FROM tarefa WHERE responsavel_id = ?";
+        List<Tarefa> tarefas = new ArrayList<>();
+
+        try (Connection conn = ConexaoMySQL.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, usuarioId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    tarefas.add(montarTarefa(rs));
+                }
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao listar tarefas do responsável", e);
+        }
+
+        return tarefas;
+    }
 
     // UPDATE: atualiza os dados de uma tarefa existente
     public void atualizar(Tarefa tarefa) {
