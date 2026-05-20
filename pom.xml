@@ -38,4 +38,23 @@
         </dependency>
     </dependencies>
 
+    <!-- =============================================== -->
+    <!-- Build (plugins de execução)                     -->
+    <!-- =============================================== -->
+    <build>
+        <plugins>
+            <!-- Plugin do exec: permite rodar `mvn exec:java` sem precisar
+                 passar -Dexec.mainClass na linha de comando.
+                 A classe configurada aqui é o ponto de entrada do app. -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.6.3</version>
+                <configuration>
+                    <mainClass>com.gestaoprojetos.App</mainClass>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
 </project>
