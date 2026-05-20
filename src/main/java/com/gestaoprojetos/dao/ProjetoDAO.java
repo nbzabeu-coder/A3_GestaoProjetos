@@ -79,36 +79,126 @@ public class ProjetoDAO {
 
     // READ: lista todos os projetos do banco
     public List<Projeto> listarTodos() {
-        // a implementar no D.5
-        return new ArrayList<>();
+        String sql = "SELECT * FROM projeto";
+        List<Projeto> projetos = new ArrayList<>();
+
+        try (Connection conn = ConexaoMySQL.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql);
+                ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                projetos.add(montarProjeto(rs));
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao listar projetos", e);
+        }
+
+        return projetos;
     }
 
     // UPDATE: atualiza os dados de um projeto existente
     public void atualizar(Projeto projeto) {
-        // a implementar no D.6
+        String sql = "UPDATE projeto SET nome = ?, descricao = ?, "
+                + "data_inicio_prevista = ?, data_inicio_real = ?, "
+                + "data_termino_prevista = ?, data_termino_real = ?, "
+                + "status = ?, gerente_id = ? WHERE id = ?";
+
+        try (Connection conn = ConexaoMySQL.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, projeto.getNome());
+            ps.setString(2, projeto.getDescricao());
+            ps.setObject(3, projeto.getDataInicioPrevista());
+            ps.setObject(4, projeto.getDataInicioReal());
+            ps.setObject(5, projeto.getDataTerminoPrevista());
+            ps.setObject(6, projeto.getDataTerminoReal());
+            ps.setString(7, projeto.getStatus().name());
+            ps.setInt(8, projeto.getGerente().getId());
+            ps.setInt(9, projeto.getId());
+
+            ps.executeUpdate();
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao atualizar projeto", e);
+        }
     }
 
     // DELETE: remove um projeto pelo id
     public void remover(int id) {
-        // a implementar no D.6
+        String sql = "DELETE FROM projeto WHERE id = ?";
+
+        try (Connection conn = ConexaoMySQL.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, id);
+            ps.executeUpdate();
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao remover projeto", e);
+        }
     }
 
     // ===== Gestão de equipes alocadas (relação N:N) =====
 
     // Aloca uma equipe ao projeto (insere na projeto_equipe)
     public void alocarEquipe(int projetoId, int equipeId) {
-        // a implementar no D.7
+        String sql = "INSERT INTO projeto_equipe (projeto_id, equipe_id) VALUES (?, ?)";
+
+        try (Connection conn = ConexaoMySQL.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, projetoId);
+            ps.setInt(2, equipeId);
+            ps.executeUpdate();
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao alocar equipe ao projeto", e);
+        }
     }
 
     // Desaloca uma equipe do projeto (remove da projeto_equipe)
     public void desalocarEquipe(int projetoId, int equipeId) {
-        // a implementar no D.7
+        String sql = "DELETE FROM projeto_equipe WHERE projeto_id = ? AND equipe_id = ?";
+
+        try (Connection conn = ConexaoMySQL.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, projetoId);
+            ps.setInt(2, equipeId);
+            ps.executeUpdate();
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao desalocar equipe do projeto", e);
+        }
     }
 
     // Lista todas as equipes alocadas a um projeto
     public List<Equipe> listarEquipes(int projetoId) {
-        // a implementar no D.7
-        return new ArrayList<>();
+        String sql = "SELECT equipe_id FROM projeto_equipe WHERE projeto_id = ?";
+        List<Equipe> equipes = new ArrayList<>();
+        EquipeDAO equipeDAO = new EquipeDAO();
+
+        try (Connection conn = ConexaoMySQL.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, projetoId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    int equipeId = rs.getInt("equipe_id");
+                    Equipe equipe = equipeDAO.buscarPorId(equipeId);
+                    if (equipe != null) {
+                        equipes.add(equipe);
+                    }
+                }
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao listar equipes do projeto", e);
+        }
+
+        return equipes;
     }
 
     // Método auxiliar (privado): monta um objeto Projeto a partir de uma
