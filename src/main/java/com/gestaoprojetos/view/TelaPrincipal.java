@@ -268,17 +268,29 @@ public class TelaPrincipal extends JFrame {
         JButton botaoEditar = new JButton("Editar");
         JButton botaoExcluir = new JButton("Excluir");
 
-        botaoNovo.addActionListener(e -> JOptionPane.showMessageDialog(
-                this,
-                "TelaEquipe será criada no sub-passo 9.4",
-                "Em construção",
-                JOptionPane.INFORMATION_MESSAGE));
+        // Novo: abre TelaEquipe (modal) em modo criar; refresh ao fechar
+        botaoNovo.addActionListener(e -> {
+            TelaEquipe dialog = new TelaEquipe(this, null);
+            dialog.setVisible(true);
+            carregarEquipes();
+        });
 
-        botaoEditar.addActionListener(e -> JOptionPane.showMessageDialog(
-                this,
-                "TelaEquipe será criada no sub-passo 9.4",
-                "Em construção",
-                JOptionPane.INFORMATION_MESSAGE));
+        // Editar: busca a equipe selecionada e abre TelaEquipe em modo editar
+        botaoEditar.addActionListener(e -> {
+            int linha = tabela.getSelectedRow();
+            if (linha < 0) {
+                JOptionPane.showMessageDialog(this,
+                        "Selecione uma equipe pra editar.",
+                        "Atenção",
+                        JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            int id = (int) this.modeloEquipes.getValueAt(linha, 0);
+            Equipe equipe = this.equipeController.buscarPorId(id);
+            TelaEquipe dialog = new TelaEquipe(this, equipe);
+            dialog.setVisible(true);
+            carregarEquipes();
+        });
 
         botaoExcluir.addActionListener(e -> excluirEquipeSelecionada(tabela));
 

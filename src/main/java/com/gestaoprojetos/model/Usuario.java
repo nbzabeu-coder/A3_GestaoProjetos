@@ -134,4 +134,13 @@ public abstract class Usuario {
     // implementar.
     public abstract String permissoes();
 
+    // toString: representação textual do usuário, usada quando ele aparece
+    // em componentes de UI que exibem objetos diretamente (ex.: o diálogo
+    // de "Adicionar Membro" na TelaEquipe usa um JComboBox de Usuario).
+    // Mostra nome + login pra desambiguar homônimos.
+    @Override
+    public String toString() {
+        return this.nome + " (" + this.login + ")";
+    }
+
 }
