@@ -124,19 +124,32 @@ public class TelaPrincipal extends JFrame {
         JButton botaoEditar = new JButton("Editar");
         JButton botaoExcluir = new JButton("Excluir");
 
-        // Novo e Editar são stubs por enquanto — vão ser ligados no sub-passo 9.3
-        // quando a TelaUsuario existir
-        botaoNovo.addActionListener(e -> JOptionPane.showMessageDialog(
-                this,
-                "TelaUsuario será criada no sub-passo 9.3",
-                "Em construção",
-                JOptionPane.INFORMATION_MESSAGE));
+        // Novo: abre TelaUsuario (JDialog modal) em modo CRIAR.
+        // setVisible(true) bloqueia até o dialog fechar; depois carregarUsuarios()
+        // recarrega a tabela refletindo o novo registro (se foi salvo).
+        botaoNovo.addActionListener(e -> {
+            TelaUsuario dialog = new TelaUsuario(this, null);
+            dialog.setVisible(true);
+            carregarUsuarios();
+        });
 
-        botaoEditar.addActionListener(e -> JOptionPane.showMessageDialog(
-                this,
-                "TelaUsuario será criada no sub-passo 9.3",
-                "Em construção",
-                JOptionPane.INFORMATION_MESSAGE));
+        // Editar: pega o usuário selecionado, busca o objeto completo no banco
+        // e abre a TelaUsuario em modo editar (com os campos preenchidos).
+        botaoEditar.addActionListener(e -> {
+            int linha = tabela.getSelectedRow();
+            if (linha < 0) {
+                JOptionPane.showMessageDialog(this,
+                        "Selecione um usuário pra editar.",
+                        "Atenção",
+                        JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            int id = (int) this.modeloUsuarios.getValueAt(linha, 0);
+            Usuario usuario = this.usuarioController.buscarPorId(id);
+            TelaUsuario dialog = new TelaUsuario(this, usuario);
+            dialog.setVisible(true);
+            carregarUsuarios(); // refresh após fechar
+        });
 
         // Excluir é funcional — chama um método dedicado
         botaoExcluir.addActionListener(e -> excluirUsuarioSelecionado(tabela));
