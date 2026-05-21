@@ -77,4 +77,12 @@ public class Equipe {
         }
         this.membros.remove(membro);
     }
+
+    // toString: representação textual da equipe, usada quando ela aparece
+    // em componentes de UI que exibem objetos diretamente (ex.: o diálogo
+    // de "Alocar Equipe" na TelaProjeto usa um JComboBox de Equipe).
+    @Override
+    public String toString() {
+        return this.nome;
+    }
 }

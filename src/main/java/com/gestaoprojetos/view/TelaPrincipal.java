@@ -389,17 +389,29 @@ public class TelaPrincipal extends JFrame {
         JButton botaoEditar = new JButton("Editar");
         JButton botaoExcluir = new JButton("Excluir");
 
-        botaoNovo.addActionListener(e -> JOptionPane.showMessageDialog(
-                this,
-                "TelaProjeto será criada no sub-passo 9.5",
-                "Em construção",
-                JOptionPane.INFORMATION_MESSAGE));
+        // Novo: abre TelaProjeto (modal) em modo criar; refresh ao fechar
+        botaoNovo.addActionListener(e -> {
+            TelaProjeto dialog = new TelaProjeto(this, null);
+            dialog.setVisible(true);
+            carregarProjetos();
+        });
 
-        botaoEditar.addActionListener(e -> JOptionPane.showMessageDialog(
-                this,
-                "TelaProjeto será criada no sub-passo 9.5",
-                "Em construção",
-                JOptionPane.INFORMATION_MESSAGE));
+        // Editar: busca o projeto selecionado e abre TelaProjeto em modo editar
+        botaoEditar.addActionListener(e -> {
+            int linha = tabela.getSelectedRow();
+            if (linha < 0) {
+                JOptionPane.showMessageDialog(this,
+                        "Selecione um projeto pra editar.",
+                        "Atenção",
+                        JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            int id = (int) this.modeloProjetos.getValueAt(linha, 0);
+            Projeto projeto = this.projetoController.buscarPorId(id);
+            TelaProjeto dialog = new TelaProjeto(this, projeto);
+            dialog.setVisible(true);
+            carregarProjetos();
+        });
 
         botaoExcluir.addActionListener(e -> excluirProjetoSelecionado(tabela));
 
