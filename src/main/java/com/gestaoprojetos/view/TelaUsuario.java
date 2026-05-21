@@ -61,6 +61,10 @@ public class TelaUsuario extends JDialog {
     private UsuarioController controller;
     private TarefaController tarefaController;
 
+    // Botões cujo estado é alternado entre visualização e edição
+    private JButton botaoEditar;
+    private JButton botaoSalvar;
+
     // Usuário sendo editado: null = modo criar; objeto existente = modo editar
     private Usuario usuarioEmEdicao;
 
@@ -94,9 +98,14 @@ public class TelaUsuario extends JDialog {
         add(construirBotoes(), BorderLayout.SOUTH);
 
         // Se for modo editar, preenche os campos com os valores existentes
-        // (Phase B vai implementar essa lógica)
         if (modoEditar) {
-            preencherCamposDoUsuario(usuarioParaEditar);
+            preencherCamposDoUsuario(usuarioParaEditar); // também desabilita cpf/login/perfil (imutáveis)
+            // Abre em modo VISUALIZAÇÃO: campos mutáveis travados até clicar em Editar.
+            // Evita alterações acidentais.
+            definirEdicaoHabilitada(false);
+        } else {
+            // Modo CRIAR: campos já editáveis; botão Editar não faz sentido aqui
+            this.botaoEditar.setVisible(false);
         }
     }
 
@@ -197,15 +206,31 @@ public class TelaUsuario extends JDialog {
     // ===== Constrói o painel dos botões (SOUTH) =====
     private JPanel construirBotoes() {
         JPanel painelBotoes = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
-        JButton botaoSalvar = new JButton("Salvar");
+        this.botaoEditar = new JButton("Editar");
+        this.botaoSalvar = new JButton("Salvar");
         JButton botaoCancelar = new JButton("Cancelar");
 
-        botaoSalvar.addActionListener(e -> salvar());
+        // Editar libera os campos mutáveis da aba Dados pra alteração
+        this.botaoEditar.addActionListener(e -> definirEdicaoHabilitada(true));
+        this.botaoSalvar.addActionListener(e -> salvar());
         botaoCancelar.addActionListener(e -> dispose()); // só fecha — sem persistir nada
 
-        painelBotoes.add(botaoSalvar);
+        painelBotoes.add(this.botaoEditar);
+        painelBotoes.add(this.botaoSalvar);
         painelBotoes.add(botaoCancelar);
         return painelBotoes;
+    }
+
+    // Alterna entre VISUALIZAÇÃO e EDIÇÃO dos campos MUTÁVEIS (nome/email/cargo/senha).
+    // Os campos imutáveis (cpf/login/perfil) permanecem desabilitados em modo editar
+    // independente disso — são tratados em preencherCamposDoUsuario().
+    private void definirEdicaoHabilitada(boolean habilitada) {
+        this.campoNome.setEnabled(habilitada);
+        this.campoEmail.setEnabled(habilitada);
+        this.campoCargo.setEnabled(habilitada);
+        this.campoSenha.setEnabled(habilitada);
+        this.botaoSalvar.setEnabled(habilitada);
+        this.botaoEditar.setEnabled(!habilitada);
     }
 
     // ===== Preenche o form com dados de um usuário existente (modo editar) =====
