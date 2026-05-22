@@ -121,7 +121,7 @@ public class TelaPrincipal extends JFrame {
         // ----- Botões (SOUTH) -----
         JPanel painelBotoes = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
         JButton botaoNovo = new JButton("Novo");
-        JButton botaoEditar = new JButton("Editar");
+        JButton botaoAbrir = new JButton("Abrir");
         JButton botaoExcluir = new JButton("Excluir");
 
         // Novo: abre TelaUsuario (JDialog modal) em modo CRIAR.
@@ -135,7 +135,7 @@ public class TelaPrincipal extends JFrame {
 
         // Editar: pega o usuário selecionado, busca o objeto completo no banco
         // e abre a TelaUsuario em modo editar (com os campos preenchidos).
-        botaoEditar.addActionListener(e -> {
+        botaoAbrir.addActionListener(e -> {
             int linha = tabela.getSelectedRow();
             if (linha < 0) {
                 JOptionPane.showMessageDialog(this,
@@ -155,7 +155,7 @@ public class TelaPrincipal extends JFrame {
         botaoExcluir.addActionListener(e -> excluirUsuarioSelecionado(tabela));
 
         painelBotoes.add(botaoNovo);
-        painelBotoes.add(botaoEditar);
+        painelBotoes.add(botaoAbrir);
         painelBotoes.add(botaoExcluir);
         painel.add(painelBotoes, BorderLayout.SOUTH);
 
@@ -265,7 +265,7 @@ public class TelaPrincipal extends JFrame {
 
         JPanel painelBotoes = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
         JButton botaoNovo = new JButton("Novo");
-        JButton botaoEditar = new JButton("Editar");
+        JButton botaoAbrir = new JButton("Abrir");
         JButton botaoExcluir = new JButton("Excluir");
 
         // Novo: abre TelaEquipe (modal) em modo criar; refresh ao fechar
@@ -276,7 +276,7 @@ public class TelaPrincipal extends JFrame {
         });
 
         // Editar: busca a equipe selecionada e abre TelaEquipe em modo editar
-        botaoEditar.addActionListener(e -> {
+        botaoAbrir.addActionListener(e -> {
             int linha = tabela.getSelectedRow();
             if (linha < 0) {
                 JOptionPane.showMessageDialog(this,
@@ -295,7 +295,7 @@ public class TelaPrincipal extends JFrame {
         botaoExcluir.addActionListener(e -> excluirEquipeSelecionada(tabela));
 
         painelBotoes.add(botaoNovo);
-        painelBotoes.add(botaoEditar);
+        painelBotoes.add(botaoAbrir);
         painelBotoes.add(botaoExcluir);
         painel.add(painelBotoes, BorderLayout.SOUTH);
 
@@ -386,7 +386,7 @@ public class TelaPrincipal extends JFrame {
 
         JPanel painelBotoes = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
         JButton botaoNovo = new JButton("Novo");
-        JButton botaoEditar = new JButton("Editar");
+        JButton botaoAbrir = new JButton("Abrir");
         JButton botaoExcluir = new JButton("Excluir");
 
         // Novo: abre TelaProjeto (modal) em modo criar; refresh ao fechar
@@ -397,7 +397,7 @@ public class TelaPrincipal extends JFrame {
         });
 
         // Editar: busca o projeto selecionado e abre TelaProjeto em modo editar
-        botaoEditar.addActionListener(e -> {
+        botaoAbrir.addActionListener(e -> {
             int linha = tabela.getSelectedRow();
             if (linha < 0) {
                 JOptionPane.showMessageDialog(this,
@@ -416,7 +416,7 @@ public class TelaPrincipal extends JFrame {
         botaoExcluir.addActionListener(e -> excluirProjetoSelecionado(tabela));
 
         painelBotoes.add(botaoNovo);
-        painelBotoes.add(botaoEditar);
+        painelBotoes.add(botaoAbrir);
         painelBotoes.add(botaoExcluir);
         painel.add(painelBotoes, BorderLayout.SOUTH);
 

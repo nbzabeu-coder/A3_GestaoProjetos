@@ -169,9 +169,13 @@ public class TelaProjeto extends JDialog {
         painelDesc.add(new JScrollPane(this.campoDescricao), BorderLayout.CENTER);
         painel.add(painelDesc, BorderLayout.CENTER);
 
-        // SOUTH do form: botões de ciclo de vida do projeto
+        // SOUTH do form: ciclo de vida (em cima) + ações dos Dados (Editar/Salvar embaixo).
+        // Os dois grupos ficam DENTRO da aba Dados — não no rodapé do dialog.
         this.painelCicloVida = construirBotoesCicloVida();
-        painel.add(this.painelCicloVida, BorderLayout.SOUTH);
+        JPanel painelSul = new JPanel(new BorderLayout());
+        painelSul.add(this.painelCicloVida, BorderLayout.CENTER);
+        painelSul.add(construirAcoesDados(), BorderLayout.SOUTH);
+        painel.add(painelSul, BorderLayout.SOUTH);
 
         // Popula o combo só com usuários que são Gerente
         carregarGerentes();
@@ -422,16 +426,31 @@ public class TelaProjeto extends JDialog {
         // Botões
         JPanel painelBotoes = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
         JButton botaoNova = new JButton("Nova Tarefa");
-        JButton botaoEditarTarefa = new JButton("Editar");
+        JButton botaoEditarTarefa = new JButton("Abrir");
         JButton botaoRemover = new JButton("Remover");
 
-        // Nova e Editar abrem a TelaDetalheTarefa, que é o sub-passo 9.6 — stub por ora
-        botaoNova.addActionListener(e -> JOptionPane.showMessageDialog(this,
-                "TelaDetalheTarefa será criada no sub-passo 9.6",
-                "Em construção", JOptionPane.INFORMATION_MESSAGE));
-        botaoEditarTarefa.addActionListener(e -> JOptionPane.showMessageDialog(this,
-                "TelaDetalheTarefa será criada no sub-passo 9.6",
-                "Em construção", JOptionPane.INFORMATION_MESSAGE));
+        // Nova: abre TelaDetalheTarefa (modal) em modo criar, no contexto deste projeto
+        botaoNova.addActionListener(e -> {
+            TelaDetalheTarefa dialog = new TelaDetalheTarefa(this, this.projetoEmEdicao.getId());
+            dialog.setVisible(true);
+            carregarTarefas(); // refresh ao fechar
+        });
+        // Editar: abre a tarefa selecionada na TelaDetalheTarefa em modo editar
+        botaoEditarTarefa.addActionListener(e -> {
+            int linha = this.tabelaTarefas.getSelectedRow();
+            if (linha < 0) {
+                JOptionPane.showMessageDialog(this,
+                        "Selecione uma tarefa pra editar.",
+                        "Atenção",
+                        JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            int id = (int) this.modeloTarefas.getValueAt(linha, 0);
+            Tarefa tarefa = this.tarefaController.buscarPorId(id);
+            TelaDetalheTarefa dialog = new TelaDetalheTarefa(this, tarefa);
+            dialog.setVisible(true);
+            carregarTarefas(); // refresh ao fechar
+        });
         // Remover já é funcional (tarefa é "folha" — sem FKs dependentes)
         botaoRemover.addActionListener(e -> removerTarefaSelecionada());
 
@@ -518,20 +537,24 @@ public class TelaProjeto extends JDialog {
         }
     }
 
-    // ===== Botões =====
-    private JPanel construirBotoes() {
-        JPanel painelBotoes = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
+    // Botões de ação dos Dados (Editar/Salvar), exibidos dentro da aba Dados
+    private JPanel construirAcoesDados() {
+        JPanel p = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
         this.botaoEditar = new JButton("Editar");
         this.botaoSalvar = new JButton("Salvar");
-        JButton botaoCancelar = new JButton("Cancelar");
-
         this.botaoEditar.addActionListener(e -> definirEdicaoHabilitada(true));
         this.botaoSalvar.addActionListener(e -> salvar());
-        botaoCancelar.addActionListener(e -> dispose());
+        p.add(this.botaoEditar);
+        p.add(this.botaoSalvar);
+        return p;
+    }
 
-        painelBotoes.add(this.botaoEditar);
-        painelBotoes.add(this.botaoSalvar);
-        painelBotoes.add(botaoCancelar);
+    // ===== Rodapé: só "Fechar" (Editar/Salvar moram na aba Dados) =====
+    private JPanel construirBotoes() {
+        JPanel painelBotoes = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
+        JButton botaoFechar = new JButton("Fechar");
+        botaoFechar.addActionListener(e -> dispose());
+        painelBotoes.add(botaoFechar);
         return painelBotoes;
     }
 

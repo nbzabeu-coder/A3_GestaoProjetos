@@ -133,24 +133,32 @@ public class TelaEquipe extends JDialog {
         painelDescricao.add(new JScrollPane(this.campoDescricao), BorderLayout.CENTER);
         painel.add(painelDescricao, BorderLayout.CENTER);
 
+        // SOUTH: ações dos DADOS (Editar/Salvar) — moram aqui DENTRO da aba Dados,
+        // porque só dizem respeito ao formulário. Membros/Tarefas têm seus próprios
+        // botões e persistem na hora, então não dependem deste Salvar.
+        painel.add(construirAcoesDados(), BorderLayout.SOUTH);
+
         return painel;
     }
 
-    // ===== Botões =====
-    private JPanel construirBotoes() {
-        JPanel painelBotoes = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
+    // Botões de ação dos Dados (Editar/Salvar), exibidos dentro da aba Dados
+    private JPanel construirAcoesDados() {
+        JPanel p = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
         this.botaoEditar = new JButton("Editar");
         this.botaoSalvar = new JButton("Salvar");
-        JButton botaoCancelar = new JButton("Cancelar");
-
-        // Editar libera os campos da aba Dados pra alteração
         this.botaoEditar.addActionListener(e -> definirEdicaoHabilitada(true));
         this.botaoSalvar.addActionListener(e -> salvar());
-        botaoCancelar.addActionListener(e -> dispose());
+        p.add(this.botaoEditar);
+        p.add(this.botaoSalvar);
+        return p;
+    }
 
-        painelBotoes.add(this.botaoEditar);
-        painelBotoes.add(this.botaoSalvar);
-        painelBotoes.add(botaoCancelar);
+    // ===== Rodapé: só "Fechar" (Editar/Salvar moram na aba Dados) =====
+    private JPanel construirBotoes() {
+        JPanel painelBotoes = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
+        JButton botaoFechar = new JButton("Fechar");
+        botaoFechar.addActionListener(e -> dispose());
+        painelBotoes.add(botaoFechar);
         return painelBotoes;
     }
 

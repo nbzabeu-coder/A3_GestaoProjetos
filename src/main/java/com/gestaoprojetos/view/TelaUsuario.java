@@ -109,15 +109,15 @@ public class TelaUsuario extends JDialog {
         }
     }
 
-    // ===== Constrói o painel do formulário (CENTER) =====
+    // ===== Constrói o painel da aba Dados (form + ações) =====
     private JPanel construirFormulario() {
         // GridLayout 7 linhas × 2 colunas (label | campo), espaçamentos 5px
-        JPanel painel = new JPanel(new GridLayout(7, 2, 5, 5));
+        JPanel grade = new JPanel(new GridLayout(7, 2, 5, 5));
 
         // Margem ao redor do formulário (top, left, bottom, right)
-        painel.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
+        grade.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
 
-        // Cria os campos (vão ser preenchidos na Phase B se modo editar)
+        // Cria os campos (preenchidos em modo editar)
         this.campoNome = new JTextField();
         this.campoCpf = new JTextField();
         this.campoEmail = new JTextField();
@@ -129,22 +129,40 @@ public class TelaUsuario extends JDialog {
 
         // Adiciona pares (label, campo) na ordem da grade (esquerda-direita, cima-baixo)
         // Labels alinhados à direita encostam no campo correspondente
-        painel.add(criarLabel("Nome:"));
-        painel.add(this.campoNome);
-        painel.add(criarLabel("CPF:"));
-        painel.add(this.campoCpf);
-        painel.add(criarLabel("E-mail:"));
-        painel.add(this.campoEmail);
-        painel.add(criarLabel("Cargo:"));
-        painel.add(this.campoCargo);
-        painel.add(criarLabel("Login:"));
-        painel.add(this.campoLogin);
-        painel.add(criarLabel("Senha:"));
-        painel.add(this.campoSenha);
-        painel.add(criarLabel("Perfil:"));
-        painel.add(this.comboPerfil);
+        grade.add(criarLabel("Nome:"));
+        grade.add(this.campoNome);
+        grade.add(criarLabel("CPF:"));
+        grade.add(this.campoCpf);
+        grade.add(criarLabel("E-mail:"));
+        grade.add(this.campoEmail);
+        grade.add(criarLabel("Cargo:"));
+        grade.add(this.campoCargo);
+        grade.add(criarLabel("Login:"));
+        grade.add(this.campoLogin);
+        grade.add(criarLabel("Senha:"));
+        grade.add(this.campoSenha);
+        grade.add(criarLabel("Perfil:"));
+        grade.add(this.comboPerfil);
 
+        // Wrapper: grade no CENTER + ações dos Dados (Editar/Salvar) no SOUTH.
+        // Os botões moram aqui DENTRO da aba Dados (não no rodapé) porque só
+        // dizem respeito ao formulário. A aba "Minhas Tarefas" é só leitura.
+        JPanel painel = new JPanel(new BorderLayout());
+        painel.add(grade, BorderLayout.CENTER);
+        painel.add(construirAcoesDados(), BorderLayout.SOUTH);
         return painel;
+    }
+
+    // Botões de ação dos Dados (Editar/Salvar), exibidos dentro da aba Dados
+    private JPanel construirAcoesDados() {
+        JPanel p = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
+        this.botaoEditar = new JButton("Editar");
+        this.botaoSalvar = new JButton("Salvar");
+        this.botaoEditar.addActionListener(e -> definirEdicaoHabilitada(true));
+        this.botaoSalvar.addActionListener(e -> salvar());
+        p.add(this.botaoEditar);
+        p.add(this.botaoSalvar);
+        return p;
     }
 
     // Helper: cria JLabel alinhado à direita (pra ficar visualmente próximo do campo)
@@ -203,21 +221,12 @@ public class TelaUsuario extends JDialog {
         return painel;
     }
 
-    // ===== Constrói o painel dos botões (SOUTH) =====
+    // ===== Rodapé: só "Fechar" (Editar/Salvar moram na aba Dados) =====
     private JPanel construirBotoes() {
         JPanel painelBotoes = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
-        this.botaoEditar = new JButton("Editar");
-        this.botaoSalvar = new JButton("Salvar");
-        JButton botaoCancelar = new JButton("Cancelar");
-
-        // Editar libera os campos mutáveis da aba Dados pra alteração
-        this.botaoEditar.addActionListener(e -> definirEdicaoHabilitada(true));
-        this.botaoSalvar.addActionListener(e -> salvar());
-        botaoCancelar.addActionListener(e -> dispose()); // só fecha — sem persistir nada
-
-        painelBotoes.add(this.botaoEditar);
-        painelBotoes.add(this.botaoSalvar);
-        painelBotoes.add(botaoCancelar);
+        JButton botaoFechar = new JButton("Fechar");
+        botaoFechar.addActionListener(e -> dispose());
+        painelBotoes.add(botaoFechar);
         return painelBotoes;
     }
 
