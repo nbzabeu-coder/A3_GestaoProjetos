@@ -898,15 +898,9 @@ public class TelaPrincipal extends JFrame {
                 }
             }
 
-            // ---- Contagem global de tarefas concluídas ----
+            // ---- Tarefas (total geral; distribuição por status vem do helper) ----
             var todasTarefas = this.tarefaController.listarTodos();
             int totalTarefas = todasTarefas.size();
-            int tarefasConcluidas = 0;
-            for (Tarefa t : todasTarefas) {
-                if (t.getStatus() == StatusTarefa.CONCLUIDA) {
-                    tarefasConcluidas++;
-                }
-            }
 
             // ===== GERAL =====
             sb.append("=========== GERAL ===========\n");
@@ -917,27 +911,19 @@ public class TelaPrincipal extends JFrame {
             sb.append("   Cancelados:   ").append(cancelados).append(" (").append(porcentagem(cancelados, totalProj)).append(")\n");
             sb.append("Equipes:  ").append(this.equipeController.listarTodos().size()).append("\n");
             sb.append("Usuários: ").append(this.usuarioController.listarTodos().size()).append("\n");
-            sb.append("Tarefas:  ").append(totalTarefas)
-              .append("   (concluídas: ").append(tarefasConcluidas)
-              .append(" — ").append(porcentagem(tarefasConcluidas, totalTarefas)).append(")\n");
+            sb.append("Tarefas:  ").append(totalTarefas).append("\n");
+            sb.append(Relatorio.distribuicaoPorStatus(todasTarefas));
 
             // ===== POR PROJETO =====
             sb.append("\n======= POR PROJETO =======\n");
             for (Projeto pr : projetos) {
                 int nEquipes = this.projetoController.listarEquipes(pr.getId()).size();
                 var tarefasProj = this.tarefaController.listarPorProjeto(pr.getId());
-                int nt = tarefasProj.size();
-                int nc = 0;
-                for (Tarefa t : tarefasProj) {
-                    if (t.getStatus() == StatusTarefa.CONCLUIDA) {
-                        nc++;
-                    }
-                }
                 sb.append("\n").append(pr.getNome()).append("  [").append(pr.getStatus()).append("]\n");
                 sb.append("   Equipes alocadas: ").append(nEquipes).append("\n");
-                sb.append("   Tarefas: ").append(nt)
-                  .append("  — concluídas: ").append(nc)
-                  .append(" (").append(porcentagem(nc, nt)).append(")\n");
+                sb.append("   Tarefas: ").append(tarefasProj.size()).append("\n");
+                // % de cada status das tarefas do projeto (reaproveita o helper do relatório)
+                sb.append(Relatorio.distribuicaoPorStatus(tarefasProj));
             }
         } catch (Exception ex) {
             sb.append("Erro ao calcular o resumo: ").append(ex.getMessage());
