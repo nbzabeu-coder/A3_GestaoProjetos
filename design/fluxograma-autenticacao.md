@@ -1,7 +1,6 @@
 # Fluxograma — Autenticação (Login)
 
 > Representa o algoritmo de **login** do sistema em **três formas**: pseudocódigo, fluxograma e linguagem de programação (Java).
-> Atende à Meta de Compreensão: *"Identificar problemas que tenham solução algorítmica e usar raciocínio lógico para formular soluções utilizando diferentes formas de representação: **pseudocódigo, fluxograma e linguagem de programação**."*
 > Diagrama em Mermaid — renderiza nativamente no VS Code (`Cmd+Shift+V`) e no GitHub.
 
 ---
@@ -137,14 +136,4 @@ public Usuario autenticar(String login, String senha) {
 | Exibir "inválidos" | `ESCREVER "..."` | `JOptionPane.showMessageDialog(...)` |
 | Erro técnico | `EM CASO DE ERRO` | `catch (Exception ex)` |
 
-> 💡 É exatamente isso que a Meta pede: **o mesmo raciocínio lógico** escrito de três jeitos. O pseudocódigo é a ideia em "português estruturado"; o fluxograma é a ideia em desenho; o Java é a ideia executável. Os três descrevem o **mesmo** algoritmo.
-
----
-
-## Conexão com a A3
-
-Este artefato cobre a Meta de Compreensão de **representação algorítmica** (pseudocódigo + fluxograma + código) e demonstra também **controle de fluxo** (decisões `if/else`) e **tratamento de exceções** (`try/catch`), que são outras Metas.
-
-Para a apresentação: mostrar as 3 representações lado a lado e dizer *"olha como o mesmo algoritmo de login aparece como ideia (pseudocódigo), como desenho (fluxograma) e como programa (Java) — e os três batem passo a passo"*.
-
-Veja também: [`diagrama-classes.md`](diagrama-classes.md) (estrutura das classes) e [`../docs/dissecando-views.md`](../docs/dissecando-views.md) (dissecação da `TelaLogin`).
+> 💡 As três representações descrevem o **mesmo** algoritmo: o pseudocódigo é a ideia em "português estruturado"; o fluxograma é a ideia em desenho; o Java é a ideia executável.
