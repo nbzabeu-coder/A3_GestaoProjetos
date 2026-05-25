@@ -109,6 +109,12 @@ classDiagram
         <<interface>>
         +gerar() String
         +exportar(formato: String) void
+        +distribuicaoPorStatus(tarefas: List~Tarefa~) String$
+    }
+
+    class ExportadorTxt {
+        -PASTA: String$
+        +salvar(conteudo: String, nomeBase: String, formato: String) String$
     }
 
     class RelatorioDeProjeto {
@@ -150,6 +156,9 @@ Usuario <|-- Colaborador
 Relatorio <|.. RelatorioDeProjeto
 Relatorio <|.. RelatorioDeEquipe
 Relatorio <|.. RelatorioDeColaborador
+RelatorioDeProjeto ..> ExportadorTxt : usa
+RelatorioDeEquipe ..> ExportadorTxt : usa
+RelatorioDeColaborador ..> ExportadorTxt : usa
 Tarefa "*" --> "0..1" Usuario : responsavel
 Tarefa "*" --> "1" Equipe : pertence
 Projeto "*" --> "1" Gerente : associação
