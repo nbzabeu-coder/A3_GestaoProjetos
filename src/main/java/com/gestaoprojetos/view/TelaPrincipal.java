@@ -11,14 +11,21 @@ import javax.swing.JScrollPane;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JTextArea;
+import javax.swing.JTextField;
 import javax.swing.JOptionPane;
 import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.event.DocumentListener;
+import javax.swing.event.DocumentEvent;
 
 // Importando layouts
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.Font;
+
+// Coleções: ordenação (Collections.sort + Comparator)
+import java.util.Collections;
+import java.util.Comparator;
 
 // Importando os Controllers — cada aba consulta o controller correspondente
 import com.gestaoprojetos.controller.UsuarioController;
@@ -63,6 +70,9 @@ public class TelaPrincipal extends JFrame {
     private DefaultTableModel modeloUsuarios;
     private DefaultTableModel modeloEquipes;
     private DefaultTableModel modeloProjetos;
+
+    // Campo de busca da aba Projetos (filtro global — qualquer coluna)
+    private JTextField campoBuscaProjetos;
 
     // ===== Componentes da aba Relatórios =====
     private JComboBox<String> comboTipoRelatorio;   // Projeto / Equipe / Colaborador
@@ -145,6 +155,9 @@ public class TelaPrincipal extends JFrame {
         // setMaxWidth impede que ele cresça mesmo com a janela larga
         tabela.getColumnModel().getColumn(0).setMaxWidth(60);
         tabela.getColumnModel().getColumn(0).setPreferredWidth(50);
+
+        // ORDENAÇÃO: clicar no cabeçalho ordena por aquela coluna
+        tabela.setAutoCreateRowSorter(true);
 
         painel.add(new JScrollPane(tabela), BorderLayout.CENTER);
 
@@ -298,6 +311,9 @@ public class TelaPrincipal extends JFrame {
         tabela.getColumnModel().getColumn(1).setPreferredWidth(150);
         tabela.getColumnModel().getColumn(2).setPreferredWidth(500);
 
+        // ORDENAÇÃO: clicar no cabeçalho ordena por aquela coluna
+        tabela.setAutoCreateRowSorter(true);
+
         painel.add(new JScrollPane(tabela), BorderLayout.CENTER);
 
         JPanel painelBotoes = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
@@ -427,7 +443,26 @@ public class TelaPrincipal extends JFrame {
         tabela.getColumnModel().getColumn(4).setPreferredWidth(110); // Início Prev.
         tabela.getColumnModel().getColumn(5).setPreferredWidth(110); // Término Prev.
 
+        // ORDENAÇÃO: habilita ordenar clicando no cabeçalho de qualquer coluna
+        // (o Swing usa TimSort internamente — O(n log n))
+        tabela.setAutoCreateRowSorter(true);
+
         painel.add(new JScrollPane(tabela), BorderLayout.CENTER);
+
+        // ===== NORTH: campo de busca global (filtra por qualquer coluna) =====
+        JPanel painelBusca = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 5));
+        painelBusca.add(new JLabel("Buscar:"));
+        this.campoBuscaProjetos = new JTextField(25);
+        painelBusca.add(this.campoBuscaProjetos);
+        painel.add(painelBusca, BorderLayout.NORTH);
+
+        // Re-filtra a cada mudança no texto (busca "ao digitar"). DocumentListener
+        // tem 3 métodos (inserir/remover/alterar texto); os 3 fazem a mesma coisa.
+        this.campoBuscaProjetos.getDocument().addDocumentListener(new DocumentListener() {
+            @Override public void insertUpdate(DocumentEvent e) { carregarProjetos(); }
+            @Override public void removeUpdate(DocumentEvent e) { carregarProjetos(); }
+            @Override public void changedUpdate(DocumentEvent e) { carregarProjetos(); }
+        });
 
         JPanel painelBotoes = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
         JButton botaoNovo = new JButton("Novo");
@@ -480,16 +515,39 @@ public class TelaPrincipal extends JFrame {
 
     private void carregarProjetos() {
         this.modeloProjetos.setRowCount(0);
+
+        // Texto digitado no campo de busca (vazio = sem filtro)
+        String filtro = (this.campoBuscaProjetos != null)
+                ? this.campoBuscaProjetos.getText().trim().toLowerCase()
+                : "";
+
         try {
-            for (Projeto p : this.projetoController.listarTodos()) {
-                this.modeloProjetos.addRow(new Object[]{
-                        p.getId(),
-                        p.getNome(),
-                        p.getStatus(),               // enum — toString() devolve "PLANEJADO" etc.
-                        p.getGerente().getNome(),    // navega o objeto Gerente já carregado pelo DAO
-                        p.getDataInicioPrevista(),   // LocalDate — toString() devolve "yyyy-mm-dd"
-                        p.getDataTerminoPrevista()
-                });
+            var projetos = this.projetoController.listarTodos();
+
+            // ORDENAÇÃO explícita: por nome, ignorando maiúsculas/minúsculas.
+            // Collections.sort usa TimSort (O(n log n)) — eficiente.
+            Collections.sort(projetos,
+                    Comparator.comparing(Projeto::getNome, String.CASE_INSENSITIVE_ORDER));
+
+            for (Projeto p : projetos) {
+                String gerente = p.getGerente().getNome();
+
+                // BUSCA global: junta TODOS os campos numa string e checa se o
+                // filtro aparece nela (busca linear por substring — O(n)).
+                String textoBusca = (p.getId() + " " + p.getNome() + " " + p.getStatus()
+                        + " " + gerente + " " + p.getDataInicioPrevista()
+                        + " " + p.getDataTerminoPrevista()).toLowerCase();
+
+                if (filtro.isEmpty() || textoBusca.contains(filtro)) {
+                    this.modeloProjetos.addRow(new Object[]{
+                            p.getId(),
+                            p.getNome(),
+                            p.getStatus(),
+                            gerente,
+                            p.getDataInicioPrevista(),
+                            p.getDataTerminoPrevista()
+                    });
+                }
             }
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this,
