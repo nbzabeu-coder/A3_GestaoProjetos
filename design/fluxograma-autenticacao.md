@@ -58,11 +58,11 @@ flowchart TD
     C -. erro técnico .-> X[/Exibir 'Erro técnico'/]
     X --> Y
 
-    style A fill:#e1f5ff
-    style Z fill:#e1ffe1
-    style Y fill:#fff4e1
-    style E fill:#ffe1e1
-    style X fill:#ffe1e1
+    style A fill:#e1f5ff,color:#000000,stroke:#0288d1
+    style Z fill:#e1ffe1,color:#000000,stroke:#388e3c
+    style Y fill:#fff4e1,color:#000000,stroke:#f9a825
+    style E fill:#ffe1e1,color:#000000,stroke:#d32f2f
+    style X fill:#ffe1e1,color:#000000,stroke:#d32f2f
 ```
 
 Legenda das formas (convenção de fluxograma):
