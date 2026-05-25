@@ -126,6 +126,30 @@ public class ProjetoDAO {
         return projetos;
     }
 
+    // READ: lista os projetos GERENCIADOS por um usuário (gerente_id = ?).
+    // Usado na aba Início ("Meus Projetos") pra mostrar os projetos do gerente.
+    public List<Projeto> listarPorGerente(int gerenteId) {
+        String sql = "SELECT * FROM projeto WHERE gerente_id = ?";
+        List<Projeto> projetos = new ArrayList<>();
+
+        try (Connection conn = ConexaoMySQL.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, gerenteId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    projetos.add(montarProjeto(rs));
+                }
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao listar projetos do gerente", e);
+        }
+
+        return projetos;
+    }
+
     // UPDATE: atualiza os dados de um projeto existente
     public void atualizar(Projeto projeto) {
         String sql = "UPDATE projeto SET nome = ?, descricao = ?, "

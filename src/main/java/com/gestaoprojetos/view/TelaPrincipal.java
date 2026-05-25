@@ -25,10 +25,13 @@ import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.Font;
 
-// Coleções: ordenação (Collections.sort + Comparator) e fila de prioridade (PriorityQueue)
+// Coleções: ordenação (Collections.sort + Comparator), fila de prioridade
+// (PriorityQueue) e listas (List/ArrayList) pra montar "Meus Projetos"
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.PriorityQueue;
+import java.util.List;
+import java.util.ArrayList;
 
 // Importando os Controllers — cada aba consulta o controller correspondente
 import com.gestaoprojetos.controller.UsuarioController;
@@ -745,14 +748,40 @@ public class TelaPrincipal extends JFrame {
     // 3 seções: Meus Projetos (participa), Minhas Equipes (é membro) e
     // Minhas Tarefas (é responsável) — esta última é uma FILA DE PRIORIDADE.
     private JPanel construirAbaInicio() {
+        // Administrador supervisiona o sistema todo (não participa de projetos):
+        // a Início dele é uma VISÃO GERAL, não um painel pessoal.
+        if (this.usuarioLogado instanceof Administrador) {
+            return construirInicioAdmin();
+        }
+
         JPanel painel = new JPanel(new GridLayout(3, 1, 5, 5));
         int meuId = this.usuarioLogado.getId();
+        // Gerente tem visão de "meus projetos" (monitoramento); os demais, visão pessoal
+        boolean ehGerente = (this.usuarioLogado instanceof Gerente);
 
-        // ----- Meus Projetos (projetos que participa) -----
+        // ----- Meus Projetos: os que GERENCIO + os que PARTICIPO (sem repetir) -----
+        // Assim um Gerente vê os projetos sob sua responsabilidade, e um
+        // Colaborador vê os projetos das equipes que participa.
         DefaultTableModel modeloMeusProjetos = modeloSomenteLeitura(
                 new String[]{"ID", "Nome", "Status"});
         try {
+            List<Projeto> meusProjetos = new ArrayList<>();
+            List<Integer> idsVistos = new ArrayList<>();
+            // 1º os que gerencio
+            for (Projeto p : this.projetoController.listarPorGerente(meuId)) {
+                if (!idsVistos.contains(p.getId())) {
+                    meusProjetos.add(p);
+                    idsVistos.add(p.getId());
+                }
+            }
+            // 2º os que participo (que ainda não estejam na lista)
             for (Projeto p : this.projetoController.listarPorParticipante(meuId)) {
+                if (!idsVistos.contains(p.getId())) {
+                    meusProjetos.add(p);
+                    idsVistos.add(p.getId());
+                }
+            }
+            for (Projeto p : meusProjetos) {
                 modeloMeusProjetos.addRow(new Object[]{p.getId(), p.getNome(), p.getStatus()});
             }
         } catch (Exception ex) {
@@ -760,44 +789,172 @@ public class TelaPrincipal extends JFrame {
         }
         painel.add(secaoComTabela("Meus Projetos", modeloMeusProjetos));
 
-        // ----- Minhas Equipes (equipes que é membro) -----
-        DefaultTableModel modeloMinhasEquipes = modeloSomenteLeitura(
-                new String[]{"ID", "Nome"});
-        try {
-            for (Equipe eq : this.equipeController.listarPorMembro(meuId)) {
-                modeloMinhasEquipes.addRow(new Object[]{eq.getId(), eq.getNome()});
-            }
-        } catch (Exception ex) {
-        }
-        painel.add(secaoComTabela("Minhas Equipes", modeloMinhasEquipes));
-
-        // ----- Minhas Tarefas: FILA DE PRIORIDADE das tarefas a fazer -----
-        DefaultTableModel modeloMinhasTarefas = modeloSomenteLeitura(
-                new String[]{"Prioridade", "Título", "Status", "Equipe"});
-        try {
-            // PriorityQueue ordenada por prioridade DECRESCENTE (ALTA primeiro).
-            // poll() sempre retira a tarefa de MAIOR prioridade — é uma "fila de
-            // trabalho": a próxima a fazer sai primeiro.
-            PriorityQueue<Tarefa> fila = new PriorityQueue<>(
-                    Comparator.comparing(Tarefa::getPrioridade).reversed());
-            for (Tarefa t : this.tarefaController.listarPorResponsavel(meuId)) {
-                // só entram na fila as tarefas "a fazer" (não concluídas)
-                if (t.getStatus() != StatusTarefa.CONCLUIDA) {
-                    fila.add(t);
+        // ----- Seção de equipes: depende do perfil -----
+        if (ehGerente) {
+            // GERENTE: equipes alocadas aos projetos que gerencia (sem repetir)
+            DefaultTableModel modeloEquipesGerente = modeloSomenteLeitura(
+                    new String[]{"ID", "Nome"});
+            try {
+                List<Integer> idsVistos = new ArrayList<>();
+                for (Projeto p : this.projetoController.listarPorGerente(meuId)) {
+                    for (Equipe eq : this.projetoController.listarEquipes(p.getId())) {
+                        if (!idsVistos.contains(eq.getId())) {
+                            idsVistos.add(eq.getId());
+                            modeloEquipesGerente.addRow(new Object[]{eq.getId(), eq.getNome()});
+                        }
+                    }
                 }
+            } catch (Exception ex) {
             }
-            // Esvazia a fila na ordem de prioridade e joga na tabela
-            while (!fila.isEmpty()) {
-                Tarefa t = fila.poll();
-                modeloMinhasTarefas.addRow(new Object[]{
-                        t.getPrioridade(), t.getTitulo(), t.getStatus(), t.getEquipe().getNome()
-                });
+            painel.add(secaoComTabela("Equipes dos meus projetos", modeloEquipesGerente));
+        } else {
+            // COLABORADOR: equipes que é membro
+            DefaultTableModel modeloMinhasEquipes = modeloSomenteLeitura(
+                    new String[]{"ID", "Nome"});
+            try {
+                for (Equipe eq : this.equipeController.listarPorMembro(meuId)) {
+                    modeloMinhasEquipes.addRow(new Object[]{eq.getId(), eq.getNome()});
+                }
+            } catch (Exception ex) {
             }
-        } catch (Exception ex) {
+            painel.add(secaoComTabela("Minhas Equipes", modeloMinhasEquipes));
         }
-        painel.add(secaoComTabela("Minhas Tarefas (a fazer, por prioridade)", modeloMinhasTarefas));
+
+        // ----- Seção de tarefas: depende do perfil -----
+        if (ehGerente) {
+            // GERENTE: acompanha TODAS as tarefas dos projetos que gerencia
+            // (visão de monitoramento — pra ver se está tudo conforme o planejado).
+            DefaultTableModel modeloTarefasGerente = modeloSomenteLeitura(
+                    new String[]{"Projeto", "Título", "Status", "Prioridade", "Responsável"});
+            try {
+                for (Projeto p : this.projetoController.listarPorGerente(meuId)) {
+                    for (Tarefa t : this.tarefaController.listarPorProjeto(p.getId())) {
+                        String resp = (t.getResponsavel() != null)
+                                ? t.getResponsavel().getNome()
+                                : "(sem responsável)";
+                        modeloTarefasGerente.addRow(new Object[]{
+                                p.getNome(), t.getTitulo(), t.getStatus(),
+                                t.getPrioridade(), resp
+                        });
+                    }
+                }
+            } catch (Exception ex) {
+            }
+            painel.add(secaoComTabela(
+                    "Tarefas dos meus projetos (acompanhamento)", modeloTarefasGerente));
+        } else {
+            // COLABORADOR (e Admin): fila pessoal de tarefas A FAZER, por prioridade.
+            // PriorityQueue ordenada por prioridade DECRESCENTE (ALTA primeiro):
+            // poll() sempre retira a de MAIOR prioridade — "fila de trabalho".
+            DefaultTableModel modeloMinhasTarefas = modeloSomenteLeitura(
+                    new String[]{"Prioridade", "Título", "Status", "Equipe"});
+            try {
+                PriorityQueue<Tarefa> fila = new PriorityQueue<>(
+                        Comparator.comparing(Tarefa::getPrioridade).reversed());
+                for (Tarefa t : this.tarefaController.listarPorResponsavel(meuId)) {
+                    if (t.getStatus() != StatusTarefa.CONCLUIDA) {
+                        fila.add(t);
+                    }
+                }
+                while (!fila.isEmpty()) {
+                    Tarefa t = fila.poll();
+                    modeloMinhasTarefas.addRow(new Object[]{
+                            t.getPrioridade(), t.getTitulo(), t.getStatus(), t.getEquipe().getNome()
+                    });
+                }
+            } catch (Exception ex) {
+            }
+            painel.add(secaoComTabela(
+                    "Minhas Tarefas (a fazer, por prioridade)", modeloMinhasTarefas));
+        }
 
         return painel;
+    }
+
+    // ===== Início do Administrador: SÓ o Resumo do sistema (rico) =====
+    private JPanel construirInicioAdmin() {
+        return construirResumoSistema();
+    }
+
+    // Resumo do sistema: dados GERAIS (com %) + dados POR PROJETO (com %).
+    // Aqui entra o "fator aritmético": cálculos de totais e porcentagens.
+    private JPanel construirResumoSistema() {
+        JPanel p = new JPanel(new BorderLayout());
+        p.setBorder(BorderFactory.createTitledBorder("Resumo do sistema"));
+
+        StringBuilder sb = new StringBuilder();
+        try {
+            var projetos = this.projetoController.listarTodos();
+            int totalProj = projetos.size();
+
+            // ---- Contagem de projetos por status ----
+            int planejados = 0, andamento = 0, concluidos = 0, cancelados = 0;
+            for (Projeto pr : projetos) {
+                switch (pr.getStatus()) {
+                    case PLANEJADO -> planejados++;
+                    case EM_ANDAMENTO -> andamento++;
+                    case CONCLUIDO -> concluidos++;
+                    case CANCELADO -> cancelados++;
+                }
+            }
+
+            // ---- Contagem global de tarefas concluídas ----
+            var todasTarefas = this.tarefaController.listarTodos();
+            int totalTarefas = todasTarefas.size();
+            int tarefasConcluidas = 0;
+            for (Tarefa t : todasTarefas) {
+                if (t.getStatus() == StatusTarefa.CONCLUIDA) {
+                    tarefasConcluidas++;
+                }
+            }
+
+            // ===== GERAL =====
+            sb.append("=========== GERAL ===========\n");
+            sb.append("Projetos: ").append(totalProj).append("\n");
+            sb.append("   Planejados:   ").append(planejados).append(" (").append(porcentagem(planejados, totalProj)).append(")\n");
+            sb.append("   Em andamento: ").append(andamento).append(" (").append(porcentagem(andamento, totalProj)).append(")\n");
+            sb.append("   Concluídos:   ").append(concluidos).append(" (").append(porcentagem(concluidos, totalProj)).append(")\n");
+            sb.append("   Cancelados:   ").append(cancelados).append(" (").append(porcentagem(cancelados, totalProj)).append(")\n");
+            sb.append("Equipes:  ").append(this.equipeController.listarTodos().size()).append("\n");
+            sb.append("Usuários: ").append(this.usuarioController.listarTodos().size()).append("\n");
+            sb.append("Tarefas:  ").append(totalTarefas)
+              .append("   (concluídas: ").append(tarefasConcluidas)
+              .append(" — ").append(porcentagem(tarefasConcluidas, totalTarefas)).append(")\n");
+
+            // ===== POR PROJETO =====
+            sb.append("\n======= POR PROJETO =======\n");
+            for (Projeto pr : projetos) {
+                int nEquipes = this.projetoController.listarEquipes(pr.getId()).size();
+                var tarefasProj = this.tarefaController.listarPorProjeto(pr.getId());
+                int nt = tarefasProj.size();
+                int nc = 0;
+                for (Tarefa t : tarefasProj) {
+                    if (t.getStatus() == StatusTarefa.CONCLUIDA) {
+                        nc++;
+                    }
+                }
+                sb.append("\n").append(pr.getNome()).append("  [").append(pr.getStatus()).append("]\n");
+                sb.append("   Equipes alocadas: ").append(nEquipes).append("\n");
+                sb.append("   Tarefas: ").append(nt)
+                  .append("  — concluídas: ").append(nc)
+                  .append(" (").append(porcentagem(nc, nt)).append(")\n");
+            }
+        } catch (Exception ex) {
+            sb.append("Erro ao calcular o resumo: ").append(ex.getMessage());
+        }
+
+        JTextArea area = new JTextArea(sb.toString());
+        area.setEditable(false);
+        area.setFont(new Font("Monospaced", Font.PLAIN, 13));
+        area.setCaretPosition(0); // começa no topo
+        p.add(new JScrollPane(area), BorderLayout.CENTER);
+        return p;
+    }
+
+    // Calcula porcentagem (parte/total) formatada como "xx.x%". Guarda divisão por zero.
+    private String porcentagem(int parte, int total) {
+        double pct = (total == 0) ? 0.0 : (parte * 100.0) / total;
+        return String.format("%.1f%%", pct);
     }
 
     // Helper: cria um DefaultTableModel só-leitura com as colunas dadas

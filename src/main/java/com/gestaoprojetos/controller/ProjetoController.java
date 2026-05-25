@@ -39,6 +39,11 @@ public class ProjetoController {
         return projetoDAO.listarPorParticipante(usuarioId);
     }
 
+    // READ: lista os projetos GERENCIADOS por um usuário (gerente) — aba Início
+    public List<Projeto> listarPorGerente(int gerenteId) {
+        return projetoDAO.listarPorGerente(gerenteId);
+    }
+
     // UPDATE: atualiza os dados de um projeto existente
     public void atualizar(Projeto projeto) {
         projetoDAO.atualizar(projeto);

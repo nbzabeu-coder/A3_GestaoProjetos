@@ -53,6 +53,9 @@ public class RelatorioDeEquipe implements Relatorio {
               .append("\n");
         }
 
+        // Linha de progresso (% de tarefas concluídas) — helper da interface
+        sb.append("\n").append(Relatorio.progressoTarefas(this.tarefas)).append("\n");
+
         sb.append("=".repeat(50)).append("\n");
         return sb.toString();
     }
