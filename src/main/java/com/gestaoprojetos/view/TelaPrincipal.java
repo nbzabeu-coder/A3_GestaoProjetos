@@ -9,6 +9,8 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JScrollPane;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JTextArea;
 import javax.swing.JOptionPane;
 import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableModel;
@@ -22,10 +24,17 @@ import java.awt.Font;
 import com.gestaoprojetos.controller.UsuarioController;
 import com.gestaoprojetos.controller.EquipeController;
 import com.gestaoprojetos.controller.ProjetoController;
+import com.gestaoprojetos.controller.TarefaController;
 // Importando os modelos
 import com.gestaoprojetos.model.Equipe;
 import com.gestaoprojetos.model.Projeto;
 import com.gestaoprojetos.model.Usuario;
+
+// Importando os relatórios (interface + implementações) — aba Relatórios
+import com.gestaoprojetos.relatorio.Relatorio;
+import com.gestaoprojetos.relatorio.RelatorioDeProjeto;
+import com.gestaoprojetos.relatorio.RelatorioDeEquipe;
+import com.gestaoprojetos.relatorio.RelatorioDeColaborador;
 
 // Classe TelaPrincipal: hub do sistema após login.
 // Estrutura (Opção C): JTabbedPane com 3 abas (Usuários | Equipes | Projetos).
@@ -44,6 +53,7 @@ public class TelaPrincipal extends JFrame {
     private UsuarioController usuarioController;
     private EquipeController equipeController;
     private ProjetoController projetoController;
+    private TarefaController tarefaController; // usado pela aba Relatórios
 
     // Modelos das tabelas: atributos porque os métodos de Excluir
     // (chamados pelos botões) precisam REMOVER linhas do modelo
@@ -51,6 +61,13 @@ public class TelaPrincipal extends JFrame {
     private DefaultTableModel modeloUsuarios;
     private DefaultTableModel modeloEquipes;
     private DefaultTableModel modeloProjetos;
+
+    // ===== Componentes da aba Relatórios =====
+    private JComboBox<String> comboTipoRelatorio;   // Projeto / Equipe / Colaborador
+    private JComboBox<Object> comboEntidadeRelatorio; // a entidade escolhida (objeto)
+    private JTextArea areaRelatorio;                 // mostra o texto gerado
+    private JButton botaoExportarRelatorio;          // só habilita após gerar
+    private Relatorio relatorioAtual;                // último relatório gerado (pra exportar)
 
     // ===== Construtor =====
     public TelaPrincipal(Usuario usuarioLogado) {
@@ -60,6 +77,7 @@ public class TelaPrincipal extends JFrame {
         this.usuarioController = new UsuarioController();
         this.equipeController = new EquipeController();
         this.projetoController = new ProjetoController();
+        this.tarefaController = new TarefaController();
 
         // Configurações da janela
         setTitle("Sistema de Gestão de Projetos — Principal");
@@ -85,6 +103,7 @@ public class TelaPrincipal extends JFrame {
         abas.addTab("Usuários", construirAbaUsuarios());
         abas.addTab("Equipes", construirAbaEquipes());
         abas.addTab("Projetos", construirAbaProjetos());
+        abas.addTab("Relatórios", construirAbaRelatorios());
         add(abas, BorderLayout.CENTER);
     }
 
@@ -474,6 +493,132 @@ public class TelaPrincipal extends JFrame {
                         "Erro",
                         JOptionPane.ERROR_MESSAGE);
             }
+        }
+    }
+
+    // ===== Aba Relatórios =====
+    // Permite escolher o TIPO de relatório (Projeto/Equipe/Colaborador) e a
+    // ENTIDADE específica, gerar o texto (mostrado num JTextArea) e exportar pra .txt.
+    private JPanel construirAbaRelatorios() {
+        JPanel painel = new JPanel(new BorderLayout(5, 5));
+
+        // NORTH: controles (tipo, item, gerar, exportar)
+        JPanel controles = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 8));
+
+        this.comboTipoRelatorio = new JComboBox<>(
+                new String[]{"Projeto", "Equipe", "Colaborador"});
+        this.comboEntidadeRelatorio = new JComboBox<>();
+        JButton botaoGerar = new JButton("Gerar");
+        this.botaoExportarRelatorio = new JButton("Exportar (.txt)");
+        this.botaoExportarRelatorio.setEnabled(false); // só habilita depois de gerar
+
+        // Quando o tipo muda, recarrega a lista de entidades
+        this.comboTipoRelatorio.addActionListener(e -> popularEntidadesRelatorio());
+        botaoGerar.addActionListener(e -> gerarRelatorio());
+        this.botaoExportarRelatorio.addActionListener(e -> exportarRelatorio());
+
+        controles.add(new JLabel("Tipo:"));
+        controles.add(this.comboTipoRelatorio);
+        controles.add(new JLabel("Item:"));
+        controles.add(this.comboEntidadeRelatorio);
+        controles.add(botaoGerar);
+        controles.add(this.botaoExportarRelatorio);
+        painel.add(controles, BorderLayout.NORTH);
+
+        // CENTER: área de texto (só leitura) onde o relatório aparece
+        this.areaRelatorio = new JTextArea();
+        this.areaRelatorio.setEditable(false);
+        // Fonte monoespaçada: alinha colunas/separadores do relatório
+        this.areaRelatorio.setFont(new Font("Monospaced", Font.PLAIN, 12));
+        painel.add(new JScrollPane(this.areaRelatorio), BorderLayout.CENTER);
+
+        // Carga inicial do combo de entidades (tipo padrão = Projeto)
+        popularEntidadesRelatorio();
+
+        return painel;
+    }
+
+    // Recarrega o combo de entidades conforme o tipo escolhido.
+    private void popularEntidadesRelatorio() {
+        this.comboEntidadeRelatorio.removeAllItems();
+        String tipo = (String) this.comboTipoRelatorio.getSelectedItem();
+        try {
+            if ("Projeto".equals(tipo)) {
+                for (Projeto p : this.projetoController.listarTodos()) {
+                    this.comboEntidadeRelatorio.addItem(p);
+                }
+            } else if ("Equipe".equals(tipo)) {
+                for (Equipe eq : this.equipeController.listarTodos()) {
+                    this.comboEntidadeRelatorio.addItem(eq);
+                }
+            } else { // Colaborador
+                for (Usuario u : this.usuarioController.listarTodos()) {
+                    this.comboEntidadeRelatorio.addItem(u);
+                }
+            }
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this,
+                    "Erro ao carregar itens: " + ex.getMessage(),
+                    "Erro", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    // Cria o relatório CERTO conforme o tipo (Opção A: passamos os dados prontos),
+    // gera o texto e mostra na tela. Aqui o POLIMORFISMO acontece: criamos uma das
+    // 3 implementações, mas a partir daí tratamos tudo como 'Relatorio'.
+    private void gerarRelatorio() {
+        String tipo = (String) this.comboTipoRelatorio.getSelectedItem();
+        Object entidade = this.comboEntidadeRelatorio.getSelectedItem();
+        if (entidade == null) {
+            JOptionPane.showMessageDialog(this, "Selecione um item.",
+                    "Atenção", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        try {
+            if ("Projeto".equals(tipo)) {
+                Projeto p = (Projeto) entidade;
+                this.relatorioAtual = new RelatorioDeProjeto(
+                        p,
+                        this.projetoController.listarEquipes(p.getId()),
+                        this.tarefaController.listarPorProjeto(p.getId()));
+            } else if ("Equipe".equals(tipo)) {
+                Equipe eq = (Equipe) entidade;
+                this.relatorioAtual = new RelatorioDeEquipe(
+                        eq,
+                        this.equipeController.listarMembros(eq.getId()),
+                        this.tarefaController.listarPorEquipe(eq.getId()));
+            } else { // Colaborador
+                Usuario u = (Usuario) entidade;
+                this.relatorioAtual = new RelatorioDeColaborador(
+                        u,
+                        this.tarefaController.listarPorResponsavel(u.getId()));
+            }
+
+            // Polimorfismo: gerar() sem saber qual das 3 é
+            this.areaRelatorio.setText(this.relatorioAtual.gerar());
+            this.areaRelatorio.setCaretPosition(0); // volta a rolagem pro topo
+            this.botaoExportarRelatorio.setEnabled(true);
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this,
+                    "Erro ao gerar relatório: " + ex.getMessage(),
+                    "Erro", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    // Exporta o último relatório gerado pra um arquivo .txt.
+    private void exportarRelatorio() {
+        if (this.relatorioAtual == null) {
+            return;
+        }
+        try {
+            this.relatorioAtual.exportar("txt"); // polimorfismo de novo
+            JOptionPane.showMessageDialog(this,
+                    "Relatório exportado para a pasta 'relatorios/' (na raiz do projeto).",
+                    "Exportado", JOptionPane.INFORMATION_MESSAGE);
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this,
+                    "Erro ao exportar: " + ex.getMessage(),
+                    "Erro", JOptionPane.ERROR_MESSAGE);
         }
     }
 

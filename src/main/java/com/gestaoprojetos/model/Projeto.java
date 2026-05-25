@@ -234,4 +234,12 @@ public class Projeto {
                 "Total de tarefas: " + this.tarefas.size() + "\n" +
                 "Total de equipes: " + this.equipes.size();
     }
+
+    // toString: representação textual do projeto, usada quando ele aparece em
+    // componentes de UI que exibem objetos diretamente (ex.: o combo de seleção
+    // da aba Relatórios usa um JComboBox de Projeto).
+    @Override
+    public String toString() {
+        return this.nome;
+    }
 }

@@ -1,3 +1,8 @@
+# ===== Relatórios gerados pela aplicação =====
+# Arquivos .txt exportados pela aba Relatórios — são artefatos gerados
+# (regeráveis pelo app), não devem ser versionados.
+relatorios/
+
 # ===== Java =====
 # Arquivos compilados
 *.class
