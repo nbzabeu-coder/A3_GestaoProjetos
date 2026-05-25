@@ -14,6 +14,7 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JOptionPane;
 import javax.swing.SwingConstants;
+import javax.swing.BorderFactory;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.DocumentEvent;
@@ -21,11 +22,13 @@ import javax.swing.event.DocumentEvent;
 // Importando layouts
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
+import java.awt.GridLayout;
 import java.awt.Font;
 
-// Coleções: ordenação (Collections.sort + Comparator)
+// Coleções: ordenação (Collections.sort + Comparator) e fila de prioridade (PriorityQueue)
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.PriorityQueue;
 
 // Importando os Controllers — cada aba consulta o controller correspondente
 import com.gestaoprojetos.controller.UsuarioController;
@@ -38,6 +41,8 @@ import com.gestaoprojetos.model.Projeto;
 import com.gestaoprojetos.model.Usuario;
 import com.gestaoprojetos.model.Administrador;
 import com.gestaoprojetos.model.Gerente;
+import com.gestaoprojetos.model.Tarefa;
+import com.gestaoprojetos.model.StatusTarefa;
 
 // Importando os relatórios (interface + implementações) — aba Relatórios
 import com.gestaoprojetos.relatorio.Relatorio;
@@ -112,6 +117,9 @@ public class TelaPrincipal extends JFrame {
         // ===== CENTER: JTabbedPane com as abas =====
         // (cada aba é construída por um método privado dedicado)
         JTabbedPane abas = new JTabbedPane();
+
+        // Aba Início (painel pessoal do usuário logado) — primeira aba
+        abas.addTab("Início", construirAbaInicio());
 
         // PERMISSÃO (versão básica via instanceof — TODO 1/8 prevê fazer isso
         // como comportamento do domínio): a aba Usuários só aparece pra
@@ -731,6 +739,83 @@ public class TelaPrincipal extends JFrame {
                     "Erro ao exportar: " + ex.getMessage(),
                     "Erro", JOptionPane.ERROR_MESSAGE);
         }
+    }
+
+    // ===== Aba Início (painel pessoal do usuário logado) =====
+    // 3 seções: Meus Projetos (participa), Minhas Equipes (é membro) e
+    // Minhas Tarefas (é responsável) — esta última é uma FILA DE PRIORIDADE.
+    private JPanel construirAbaInicio() {
+        JPanel painel = new JPanel(new GridLayout(3, 1, 5, 5));
+        int meuId = this.usuarioLogado.getId();
+
+        // ----- Meus Projetos (projetos que participa) -----
+        DefaultTableModel modeloMeusProjetos = modeloSomenteLeitura(
+                new String[]{"ID", "Nome", "Status"});
+        try {
+            for (Projeto p : this.projetoController.listarPorParticipante(meuId)) {
+                modeloMeusProjetos.addRow(new Object[]{p.getId(), p.getNome(), p.getStatus()});
+            }
+        } catch (Exception ex) {
+            // silencioso aqui — erro de banco já aparece nas outras abas
+        }
+        painel.add(secaoComTabela("Meus Projetos", modeloMeusProjetos));
+
+        // ----- Minhas Equipes (equipes que é membro) -----
+        DefaultTableModel modeloMinhasEquipes = modeloSomenteLeitura(
+                new String[]{"ID", "Nome"});
+        try {
+            for (Equipe eq : this.equipeController.listarPorMembro(meuId)) {
+                modeloMinhasEquipes.addRow(new Object[]{eq.getId(), eq.getNome()});
+            }
+        } catch (Exception ex) {
+        }
+        painel.add(secaoComTabela("Minhas Equipes", modeloMinhasEquipes));
+
+        // ----- Minhas Tarefas: FILA DE PRIORIDADE das tarefas a fazer -----
+        DefaultTableModel modeloMinhasTarefas = modeloSomenteLeitura(
+                new String[]{"Prioridade", "Título", "Status", "Equipe"});
+        try {
+            // PriorityQueue ordenada por prioridade DECRESCENTE (ALTA primeiro).
+            // poll() sempre retira a tarefa de MAIOR prioridade — é uma "fila de
+            // trabalho": a próxima a fazer sai primeiro.
+            PriorityQueue<Tarefa> fila = new PriorityQueue<>(
+                    Comparator.comparing(Tarefa::getPrioridade).reversed());
+            for (Tarefa t : this.tarefaController.listarPorResponsavel(meuId)) {
+                // só entram na fila as tarefas "a fazer" (não concluídas)
+                if (t.getStatus() != StatusTarefa.CONCLUIDA) {
+                    fila.add(t);
+                }
+            }
+            // Esvazia a fila na ordem de prioridade e joga na tabela
+            while (!fila.isEmpty()) {
+                Tarefa t = fila.poll();
+                modeloMinhasTarefas.addRow(new Object[]{
+                        t.getPrioridade(), t.getTitulo(), t.getStatus(), t.getEquipe().getNome()
+                });
+            }
+        } catch (Exception ex) {
+        }
+        painel.add(secaoComTabela("Minhas Tarefas (a fazer, por prioridade)", modeloMinhasTarefas));
+
+        return painel;
+    }
+
+    // Helper: cria um DefaultTableModel só-leitura com as colunas dadas
+    private DefaultTableModel modeloSomenteLeitura(String[] colunas) {
+        return new DefaultTableModel(colunas, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+    }
+
+    // Helper: monta uma seção (borda com título + JTable em JScrollPane)
+    private JPanel secaoComTabela(String titulo, DefaultTableModel modelo) {
+        JPanel p = new JPanel(new BorderLayout());
+        p.setBorder(BorderFactory.createTitledBorder(titulo));
+        p.add(new JScrollPane(new JTable(modelo)), BorderLayout.CENTER);
+        return p;
     }
 
     // ===== Getter herdado do stub anterior (útil pra outras telas) =====
