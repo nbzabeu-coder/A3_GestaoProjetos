@@ -33,6 +33,12 @@ public class ProjetoController {
         return projetoDAO.listarTodos();
     }
 
+    // READ: lista os projetos em que um usuário participa (é membro de alguma
+    // equipe alocada ao projeto) — pra permissões/relatórios do Colaborador
+    public List<Projeto> listarPorParticipante(int usuarioId) {
+        return projetoDAO.listarPorParticipante(usuarioId);
+    }
+
     // UPDATE: atualiza os dados de um projeto existente
     public void atualizar(Projeto projeto) {
         projetoDAO.atualizar(projeto);

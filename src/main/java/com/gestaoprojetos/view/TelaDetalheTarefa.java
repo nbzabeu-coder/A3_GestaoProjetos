@@ -39,6 +39,8 @@ import com.gestaoprojetos.controller.EquipeController;
 import com.gestaoprojetos.model.Tarefa;
 import com.gestaoprojetos.model.Equipe;
 import com.gestaoprojetos.model.Usuario;
+import com.gestaoprojetos.model.Administrador;
+import com.gestaoprojetos.model.Gerente;
 import com.gestaoprojetos.model.Prioridade;
 import com.gestaoprojetos.model.StatusTarefa;
 
@@ -78,20 +80,30 @@ public class TelaDetalheTarefa extends JDialog {
     // Contexto
     private int projetoId;          // projeto dono da tarefa
     private Tarefa tarefaEmEdicao;  // null = criar; existente = editar
+    private Usuario usuarioLogado;
+
+    // Permissões:
+    // - podeEditarDados: editar título/datas/etc (Administrador/Gerente)
+    // - podeMudarStatus: usar o ciclo de vida (Admin/Gerente sempre; Colaborador
+    //   só se participa do projeto da tarefa)
+    private boolean podeEditarDados;
+    private boolean podeMudarStatus;
 
     // ===== Construtor (modo CRIAR) =====
-    public TelaDetalheTarefa(Window pai, int projetoId) {
+    public TelaDetalheTarefa(Window pai, int projetoId, Usuario usuarioLogado) {
         super(pai, Dialog.ModalityType.APPLICATION_MODAL);
         this.projetoId = projetoId;
         this.tarefaEmEdicao = null;
+        this.usuarioLogado = usuarioLogado;
         inicializar();
     }
 
     // ===== Construtor (modo EDITAR) =====
-    public TelaDetalheTarefa(Window pai, Tarefa tarefa) {
+    public TelaDetalheTarefa(Window pai, Tarefa tarefa, Usuario usuarioLogado) {
         super(pai, Dialog.ModalityType.APPLICATION_MODAL);
         this.tarefaEmEdicao = tarefa;
         this.projetoId = tarefa.getProjetoId();
+        this.usuarioLogado = usuarioLogado;
         inicializar();
     }
 
@@ -100,6 +112,15 @@ public class TelaDetalheTarefa extends JDialog {
         this.controller = new TarefaController();
         this.projetoController = new ProjetoController();
         this.equipeController = new EquipeController();
+
+        // Permissões: Administrador/Gerente editam tudo. Colaborador só muda o
+        // STATUS, e somente de tarefas de projetos que ele participa.
+        this.podeEditarDados = (this.usuarioLogado instanceof Administrador)
+                || (this.usuarioLogado instanceof Gerente);
+        // Short-circuit: a query de participação só roda pra Colaborador
+        this.podeMudarStatus = this.podeEditarDados
+                || this.projetoController.listarPorParticipante(this.usuarioLogado.getId())
+                        .stream().anyMatch(p -> p.getId() == this.projetoId);
 
         boolean modoEditar = (this.tarefaEmEdicao != null);
         setTitle(modoEditar ? "Editar Tarefa" : "Nova Tarefa");
@@ -124,6 +145,11 @@ public class TelaDetalheTarefa extends JDialog {
             preencherCampos(this.tarefaEmEdicao);
             definirEdicaoHabilitada(false); // abre travado; Editar libera
             atualizarStatusTarefa();        // habilita os botões de status conforme estado
+            // PERMISSÃO: Colaborador não edita os DADOS da tarefa — esconde o Editar
+            // (a aba Ciclo de vida continua disponível conforme podeMudarStatus)
+            if (!this.podeEditarDados) {
+                this.botaoEditar.setVisible(false);
+            }
         } else {
             // Criar: campos liberados, sem botão Editar
             this.botaoEditar.setVisible(false);
@@ -255,9 +281,11 @@ public class TelaDetalheTarefa extends JDialog {
     private void atualizarStatusTarefa() {
         StatusTarefa status = this.tarefaEmEdicao.getStatus();
         this.labelStatus.setText(status.toString());
-        this.botaoIniciar.setEnabled(status == StatusTarefa.PENDENTE);
-        this.botaoConcluir.setEnabled(status == StatusTarefa.EM_ANDAMENTO);
-        this.botaoReabrir.setEnabled(status == StatusTarefa.CONCLUIDA);
+        // Só habilita a transição se o usuário pode mudar status (admin/gerente,
+        // ou colaborador que participa do projeto) E o status atual permite.
+        this.botaoIniciar.setEnabled(this.podeMudarStatus && status == StatusTarefa.PENDENTE);
+        this.botaoConcluir.setEnabled(this.podeMudarStatus && status == StatusTarefa.EM_ANDAMENTO);
+        this.botaoReabrir.setEnabled(this.podeMudarStatus && status == StatusTarefa.CONCLUIDA);
     }
 
     // ===== Rodapé: só "Fechar" =====

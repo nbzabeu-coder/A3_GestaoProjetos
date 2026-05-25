@@ -97,6 +97,35 @@ public class ProjetoDAO {
         return projetos;
     }
 
+    // READ: lista os projetos em que um usuário PARTICIPA — ou seja, projetos
+    // que têm alguma equipe da qual o usuário é membro.
+    // JOIN duplo: projeto -> projeto_equipe -> equipe_membro.
+    // DISTINCT porque o usuário pode estar em várias equipes do mesmo projeto.
+    public List<Projeto> listarPorParticipante(int usuarioId) {
+        String sql = "SELECT DISTINCT p.* FROM projeto p "
+                + "JOIN projeto_equipe pe ON p.id = pe.projeto_id "
+                + "JOIN equipe_membro em ON pe.equipe_id = em.equipe_id "
+                + "WHERE em.usuario_id = ?";
+        List<Projeto> projetos = new ArrayList<>();
+
+        try (Connection conn = ConexaoMySQL.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, usuarioId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    projetos.add(montarProjeto(rs));
+                }
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao listar projetos do participante", e);
+        }
+
+        return projetos;
+    }
+
     // UPDATE: atualiza os dados de um projeto existente
     public void atualizar(Projeto projeto) {
         String sql = "UPDATE projeto SET nome = ?, descricao = ?, "

@@ -41,6 +41,7 @@ import com.gestaoprojetos.controller.TarefaController;
 import com.gestaoprojetos.model.Projeto;
 import com.gestaoprojetos.model.Usuario;
 import com.gestaoprojetos.model.Gerente;
+import com.gestaoprojetos.model.Administrador;
 import com.gestaoprojetos.model.StatusProjeto;
 import com.gestaoprojetos.model.Equipe;
 import com.gestaoprojetos.model.Tarefa;
@@ -90,8 +91,15 @@ public class TelaProjeto extends JDialog {
     private DefaultTableModel modeloTarefas;
     private JTable tabelaTarefas;
 
+    // Usuário logado + permissão. Só Administrador/Gerente gerenciam o projeto
+    // (editar dados, ciclo de vida, alocar equipes, criar/remover tarefas).
+    // Colaborador vê tudo em leitura, mas pode mudar o STATUS das tarefas
+    // (tratado na TelaDetalheTarefa).
+    private Usuario usuarioLogado;
+    private boolean podeGerenciar;
+
     // ===== Construtor =====
-    public TelaProjeto(JFrame pai, Projeto projetoParaEditar) {
+    public TelaProjeto(JFrame pai, Projeto projetoParaEditar, Usuario usuarioLogado) {
         super(pai, true); // modal
 
         this.controller = new ProjetoController();
@@ -99,6 +107,9 @@ public class TelaProjeto extends JDialog {
         this.equipeController = new EquipeController();
         this.tarefaController = new TarefaController();
         this.projetoEmEdicao = projetoParaEditar;
+        this.usuarioLogado = usuarioLogado;
+        this.podeGerenciar = (usuarioLogado instanceof Administrador)
+                || (usuarioLogado instanceof Gerente);
 
         boolean modoEditar = (projetoParaEditar != null);
         setTitle(modoEditar ? "Editar Projeto" : "Novo Projeto");
@@ -130,6 +141,12 @@ public class TelaProjeto extends JDialog {
             // (o projeto ainda não existe — nasce sempre PLANEJADO ao salvar)
             this.botaoEditar.setVisible(false);
             this.painelCicloVida.setVisible(false);
+        }
+
+        // PERMISSÃO: Colaborador vê o projeto em modo leitura — sem botão Editar
+        // (o ciclo de vida e os botões de gestão são tratados nos seus métodos)
+        if (!this.podeGerenciar) {
+            this.botaoEditar.setVisible(false);
         }
     }
 
@@ -251,10 +268,12 @@ public class TelaProjeto extends JDialog {
         // PLANEJADO → pode Iniciar ou Cancelar
         // EM_ANDAMENTO → pode Concluir ou Cancelar
         // CONCLUIDO / CANCELADO → estados finais, nada habilitado
-        this.botaoIniciar.setEnabled(status == StatusProjeto.PLANEJADO);
-        this.botaoConcluir.setEnabled(status == StatusProjeto.EM_ANDAMENTO);
-        this.botaoCancelarProjeto.setEnabled(
-                status == StatusProjeto.PLANEJADO || status == StatusProjeto.EM_ANDAMENTO);
+        // Só habilita as transições se o usuário pode gerenciar (admin/gerente) E
+        // o status atual permite. Colaborador nunca muda o ciclo de vida do projeto.
+        this.botaoIniciar.setEnabled(this.podeGerenciar && status == StatusProjeto.PLANEJADO);
+        this.botaoConcluir.setEnabled(this.podeGerenciar && status == StatusProjeto.EM_ANDAMENTO);
+        this.botaoCancelarProjeto.setEnabled(this.podeGerenciar
+                && (status == StatusProjeto.PLANEJADO || status == StatusProjeto.EM_ANDAMENTO));
     }
 
     // ===== Aba "Equipes alocadas" (gestão N:N entre Projeto e Equipe) =====
@@ -289,6 +308,9 @@ public class TelaProjeto extends JDialog {
         JButton botaoDesalocar = new JButton("Desalocar Equipe");
         botaoAlocar.addActionListener(e -> alocarEquipe());
         botaoDesalocar.addActionListener(e -> desalocarEquipe());
+        // PERMISSÃO: Colaborador só visualiza as equipes alocadas
+        botaoAlocar.setEnabled(this.podeGerenciar);
+        botaoDesalocar.setEnabled(this.podeGerenciar);
         painelBotoes.add(botaoAlocar);
         painelBotoes.add(botaoDesalocar);
         painel.add(painelBotoes, BorderLayout.SOUTH);
@@ -431,7 +453,8 @@ public class TelaProjeto extends JDialog {
 
         // Nova: abre TelaDetalheTarefa (modal) em modo criar, no contexto deste projeto
         botaoNova.addActionListener(e -> {
-            TelaDetalheTarefa dialog = new TelaDetalheTarefa(this, this.projetoEmEdicao.getId());
+            TelaDetalheTarefa dialog = new TelaDetalheTarefa(
+                    this, this.projetoEmEdicao.getId(), this.usuarioLogado);
             dialog.setVisible(true);
             carregarTarefas(); // refresh ao fechar
         });
@@ -447,12 +470,18 @@ public class TelaProjeto extends JDialog {
             }
             int id = (int) this.modeloTarefas.getValueAt(linha, 0);
             Tarefa tarefa = this.tarefaController.buscarPorId(id);
-            TelaDetalheTarefa dialog = new TelaDetalheTarefa(this, tarefa);
+            TelaDetalheTarefa dialog = new TelaDetalheTarefa(this, tarefa, this.usuarioLogado);
             dialog.setVisible(true);
             carregarTarefas(); // refresh ao fechar
         });
         // Remover já é funcional (tarefa é "folha" — sem FKs dependentes)
         botaoRemover.addActionListener(e -> removerTarefaSelecionada());
+
+        // PERMISSÃO: Colaborador não cria nem remove tarefas. Mas "Abrir" fica
+        // habilitado pra todos — é por ali que o Colaborador muda o STATUS da
+        // tarefa (a TelaDetalheTarefa decide o que ele pode editar).
+        botaoNova.setEnabled(this.podeGerenciar);
+        botaoRemover.setEnabled(this.podeGerenciar);
 
         painelBotoes.add(botaoNova);
         painelBotoes.add(botaoEditarTarefa);

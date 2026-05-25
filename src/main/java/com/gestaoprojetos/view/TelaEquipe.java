@@ -36,6 +36,8 @@ import com.gestaoprojetos.model.Equipe;
 import com.gestaoprojetos.model.Usuario;
 import com.gestaoprojetos.model.Tarefa;
 import com.gestaoprojetos.model.Projeto;
+import com.gestaoprojetos.model.Administrador;
+import com.gestaoprojetos.model.Gerente;
 
 // Importando a base das exceções customizadas
 import com.gestaoprojetos.exception.GestaoProjetosException;
@@ -71,8 +73,12 @@ public class TelaEquipe extends JDialog {
     private DefaultTableModel modeloMembros;
     private JTable tabelaMembros;
 
+    // Permissão: só Administrador/Gerente podem editar equipe e gerenciar membros.
+    // Colaborador vê tudo em modo leitura.
+    private boolean podeGerenciar;
+
     // ===== Construtor =====
-    public TelaEquipe(JFrame pai, Equipe equipeParaEditar) {
+    public TelaEquipe(JFrame pai, Equipe equipeParaEditar, Usuario usuarioLogado) {
         super(pai, true); // modal
 
         this.controller = new EquipeController();
@@ -80,6 +86,10 @@ public class TelaEquipe extends JDialog {
         this.tarefaController = new TarefaController();
         this.projetoController = new ProjetoController();
         this.equipeEmEdicao = equipeParaEditar;
+
+        // Define a permissão com base no perfil de quem está logado
+        this.podeGerenciar = (usuarioLogado instanceof Administrador)
+                || (usuarioLogado instanceof Gerente);
 
         boolean modoEditar = (equipeParaEditar != null);
         setTitle(modoEditar ? "Editar Equipe" : "Nova Equipe");
@@ -106,6 +116,11 @@ public class TelaEquipe extends JDialog {
             definirEdicaoHabilitada(false);
         } else {
             // Modo CRIAR: campos já editáveis; o botão Editar não faz sentido aqui
+            this.botaoEditar.setVisible(false);
+        }
+
+        // PERMISSÃO: Colaborador vê a equipe em modo leitura — sem botão Editar
+        if (!this.podeGerenciar) {
             this.botaoEditar.setVisible(false);
         }
     }
@@ -212,6 +227,9 @@ public class TelaEquipe extends JDialog {
         JButton botaoRemover = new JButton("Remover Membro");
         botaoAdicionar.addActionListener(e -> adicionarMembro());
         botaoRemover.addActionListener(e -> removerMembro());
+        // PERMISSÃO: Colaborador só visualiza os membros (não gerencia)
+        botaoAdicionar.setEnabled(this.podeGerenciar);
+        botaoRemover.setEnabled(this.podeGerenciar);
         painelBotoes.add(botaoAdicionar);
         painelBotoes.add(botaoRemover);
         painel.add(painelBotoes, BorderLayout.SOUTH);

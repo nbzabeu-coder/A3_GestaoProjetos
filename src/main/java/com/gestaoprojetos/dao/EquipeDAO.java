@@ -87,6 +87,32 @@ public class EquipeDAO {
         return equipes;
     }
 
+    // READ: lista as equipes em que um usuário é MEMBRO (JOIN com equipe_membro).
+    // Usado pra permissões (participação) e relatórios filtrados do Colaborador.
+    public List<Equipe> listarPorMembro(int usuarioId) {
+        String sql = "SELECT e.* FROM equipe e "
+                + "JOIN equipe_membro em ON e.id = em.equipe_id "
+                + "WHERE em.usuario_id = ?";
+        List<Equipe> equipes = new ArrayList<>();
+
+        try (Connection conn = ConexaoMySQL.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, usuarioId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    equipes.add(montarEquipe(rs));
+                }
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao listar equipes do membro", e);
+        }
+
+        return equipes;
+    }
+
     // UPDATE: atualiza nome e descrição de uma equipe existente
     public void atualizar(Equipe equipe) {
         String sql = "UPDATE equipe SET nome = ?, descricao = ? WHERE id = ?";

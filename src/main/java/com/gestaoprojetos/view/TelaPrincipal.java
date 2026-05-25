@@ -29,6 +29,8 @@ import com.gestaoprojetos.controller.TarefaController;
 import com.gestaoprojetos.model.Equipe;
 import com.gestaoprojetos.model.Projeto;
 import com.gestaoprojetos.model.Usuario;
+import com.gestaoprojetos.model.Administrador;
+import com.gestaoprojetos.model.Gerente;
 
 // Importando os relatórios (interface + implementações) — aba Relatórios
 import com.gestaoprojetos.relatorio.Relatorio;
@@ -90,17 +92,26 @@ public class TelaPrincipal extends JFrame {
         // JPanel wrapper pra dar um respiro (padding) ao redor do label
         JPanel painelSaudacao = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
         JLabel labelSaudacao = new JLabel(
-                "Bem-vinda, " + this.usuarioLogado.getNome() + "!",
+                "Bem-vindo(a), " + this.usuarioLogado.getNome() + "!",
                 SwingConstants.CENTER);
         // Aumenta um pouco a fonte pra dar destaque ao header
         labelSaudacao.setFont(labelSaudacao.getFont().deriveFont(Font.BOLD, 16f));
         painelSaudacao.add(labelSaudacao);
         add(painelSaudacao, BorderLayout.NORTH);
 
-        // ===== CENTER: JTabbedPane com as 3 abas =====
+        // ===== CENTER: JTabbedPane com as abas =====
         // (cada aba é construída por um método privado dedicado)
         JTabbedPane abas = new JTabbedPane();
-        abas.addTab("Usuários", construirAbaUsuarios());
+
+        // PERMISSÃO (versão básica via instanceof — TODO 1/8 prevê fazer isso
+        // como comportamento do domínio): a aba Usuários só aparece pra
+        // Administrador e Gerente. Colaborador não a vê.
+        boolean podeVerUsuarios = (this.usuarioLogado instanceof Administrador)
+                || (this.usuarioLogado instanceof Gerente);
+        if (podeVerUsuarios) {
+            abas.addTab("Usuários", construirAbaUsuarios());
+        }
+
         abas.addTab("Equipes", construirAbaEquipes());
         abas.addTab("Projetos", construirAbaProjetos());
         abas.addTab("Relatórios", construirAbaRelatorios());
@@ -172,6 +183,13 @@ public class TelaPrincipal extends JFrame {
 
         // Excluir é funcional — chama um método dedicado
         botaoExcluir.addActionListener(e -> excluirUsuarioSelecionado(tabela));
+
+        // PERMISSÃO: só Administrador pode criar/abrir/excluir usuários.
+        // Pro Gerente, a aba fica só leitura (vê a tabela, botões desabilitados).
+        boolean podeEditarUsuarios = (this.usuarioLogado instanceof Administrador);
+        botaoNovo.setEnabled(podeEditarUsuarios);
+        botaoAbrir.setEnabled(podeEditarUsuarios);
+        botaoExcluir.setEnabled(podeEditarUsuarios);
 
         painelBotoes.add(botaoNovo);
         painelBotoes.add(botaoAbrir);
@@ -289,29 +307,37 @@ public class TelaPrincipal extends JFrame {
 
         // Novo: abre TelaEquipe (modal) em modo criar; refresh ao fechar
         botaoNovo.addActionListener(e -> {
-            TelaEquipe dialog = new TelaEquipe(this, null);
+            TelaEquipe dialog = new TelaEquipe(this, null, this.usuarioLogado);
             dialog.setVisible(true);
             carregarEquipes();
         });
 
-        // Editar: busca a equipe selecionada e abre TelaEquipe em modo editar
+        // Abrir: busca a equipe selecionada e abre TelaEquipe (editar ou só leitura,
+        // conforme o perfil — a própria TelaEquipe decide o que liberar)
         botaoAbrir.addActionListener(e -> {
             int linha = tabela.getSelectedRow();
             if (linha < 0) {
                 JOptionPane.showMessageDialog(this,
-                        "Selecione uma equipe pra editar.",
+                        "Selecione uma equipe pra abrir.",
                         "Atenção",
                         JOptionPane.WARNING_MESSAGE);
                 return;
             }
             int id = (int) this.modeloEquipes.getValueAt(linha, 0);
             Equipe equipe = this.equipeController.buscarPorId(id);
-            TelaEquipe dialog = new TelaEquipe(this, equipe);
+            TelaEquipe dialog = new TelaEquipe(this, equipe, this.usuarioLogado);
             dialog.setVisible(true);
             carregarEquipes();
         });
 
         botaoExcluir.addActionListener(e -> excluirEquipeSelecionada(tabela));
+
+        // PERMISSÃO: Colaborador só visualiza equipes — Novo/Excluir desabilitados.
+        // "Abrir" fica disponível (a TelaEquipe abre em modo leitura pra ele).
+        boolean podeGerenciar = (this.usuarioLogado instanceof Administrador)
+                || (this.usuarioLogado instanceof Gerente);
+        botaoNovo.setEnabled(podeGerenciar);
+        botaoExcluir.setEnabled(podeGerenciar);
 
         painelBotoes.add(botaoNovo);
         painelBotoes.add(botaoAbrir);
@@ -410,29 +436,37 @@ public class TelaPrincipal extends JFrame {
 
         // Novo: abre TelaProjeto (modal) em modo criar; refresh ao fechar
         botaoNovo.addActionListener(e -> {
-            TelaProjeto dialog = new TelaProjeto(this, null);
+            TelaProjeto dialog = new TelaProjeto(this, null, this.usuarioLogado);
             dialog.setVisible(true);
             carregarProjetos();
         });
 
-        // Editar: busca o projeto selecionado e abre TelaProjeto em modo editar
+        // Abrir: busca o projeto selecionado e abre TelaProjeto (editar ou leitura,
+        // conforme o perfil — a TelaProjeto decide o que liberar)
         botaoAbrir.addActionListener(e -> {
             int linha = tabela.getSelectedRow();
             if (linha < 0) {
                 JOptionPane.showMessageDialog(this,
-                        "Selecione um projeto pra editar.",
+                        "Selecione um projeto pra abrir.",
                         "Atenção",
                         JOptionPane.WARNING_MESSAGE);
                 return;
             }
             int id = (int) this.modeloProjetos.getValueAt(linha, 0);
             Projeto projeto = this.projetoController.buscarPorId(id);
-            TelaProjeto dialog = new TelaProjeto(this, projeto);
+            TelaProjeto dialog = new TelaProjeto(this, projeto, this.usuarioLogado);
             dialog.setVisible(true);
             carregarProjetos();
         });
 
         botaoExcluir.addActionListener(e -> excluirProjetoSelecionado(tabela));
+
+        // PERMISSÃO: Colaborador só visualiza projetos — Novo/Excluir desabilitados.
+        // "Abrir" fica disponível (TelaProjeto abre em leitura; tarefas mudáveis lá).
+        boolean podeGerenciarProjetos = (this.usuarioLogado instanceof Administrador)
+                || (this.usuarioLogado instanceof Gerente);
+        botaoNovo.setEnabled(podeGerenciarProjetos);
+        botaoExcluir.setEnabled(podeGerenciarProjetos);
 
         painelBotoes.add(botaoNovo);
         painelBotoes.add(botaoAbrir);
@@ -539,21 +573,40 @@ public class TelaPrincipal extends JFrame {
     }
 
     // Recarrega o combo de entidades conforme o tipo escolhido.
+    // PERMISSÃO: Administrador/Gerente veem tudo; Colaborador vê só os
+    // projetos/equipes que participa, e só gera relatório do PRÓPRIO usuário.
     private void popularEntidadesRelatorio() {
         this.comboEntidadeRelatorio.removeAllItems();
         String tipo = (String) this.comboTipoRelatorio.getSelectedItem();
+
+        boolean veTudo = (this.usuarioLogado instanceof Administrador)
+                || (this.usuarioLogado instanceof Gerente);
+        int meuId = this.usuarioLogado.getId();
+
         try {
             if ("Projeto".equals(tipo)) {
-                for (Projeto p : this.projetoController.listarTodos()) {
+                // 'var' infere List<Projeto> dos dois ramos do ternário
+                var projetos = veTudo
+                        ? this.projetoController.listarTodos()
+                        : this.projetoController.listarPorParticipante(meuId);
+                for (Projeto p : projetos) {
                     this.comboEntidadeRelatorio.addItem(p);
                 }
             } else if ("Equipe".equals(tipo)) {
-                for (Equipe eq : this.equipeController.listarTodos()) {
+                var equipes = veTudo
+                        ? this.equipeController.listarTodos()
+                        : this.equipeController.listarPorMembro(meuId);
+                for (Equipe eq : equipes) {
                     this.comboEntidadeRelatorio.addItem(eq);
                 }
             } else { // Colaborador
-                for (Usuario u : this.usuarioController.listarTodos()) {
-                    this.comboEntidadeRelatorio.addItem(u);
+                if (veTudo) {
+                    for (Usuario u : this.usuarioController.listarTodos()) {
+                        this.comboEntidadeRelatorio.addItem(u);
+                    }
+                } else {
+                    // Colaborador só pode gerar relatório de si mesmo
+                    this.comboEntidadeRelatorio.addItem(this.usuarioLogado);
                 }
             }
         } catch (Exception ex) {

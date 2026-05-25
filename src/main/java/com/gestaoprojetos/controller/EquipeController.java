@@ -33,6 +33,11 @@ public class EquipeController {
         return equipeDAO.listarTodos();
     }
 
+    // READ: lista as equipes em que um usuário é membro (pra permissões/relatórios)
+    public List<Equipe> listarPorMembro(int usuarioId) {
+        return equipeDAO.listarPorMembro(usuarioId);
+    }
+
     // UPDATE: atualiza os dados de uma equipe existente
     public void atualizar(Equipe equipe) {
         equipeDAO.atualizar(equipe);
