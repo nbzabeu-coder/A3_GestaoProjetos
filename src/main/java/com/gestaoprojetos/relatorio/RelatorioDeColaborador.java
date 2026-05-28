@@ -1,6 +1,7 @@
 package com.gestaoprojetos.relatorio;
 
 import java.util.List;
+import java.util.Map;
 
 import com.gestaoprojetos.model.Usuario;
 import com.gestaoprojetos.model.Tarefa;
@@ -11,10 +12,14 @@ public class RelatorioDeColaborador implements Relatorio {
 
     private final Usuario colaborador;
     private final List<Tarefa> tarefas;
+    // Map projetoId → nome do projeto (mesma ideia do RelatorioDeEquipe).
+    private final Map<Integer, String> projetoPorId;
 
-    public RelatorioDeColaborador(Usuario colaborador, List<Tarefa> tarefas) {
+    public RelatorioDeColaborador(Usuario colaborador, List<Tarefa> tarefas,
+                                   Map<Integer, String> projetoPorId) {
         this.colaborador = colaborador;
         this.tarefas = tarefas;
+        this.projetoPorId = projetoPorId;
     }
 
     @Override
@@ -32,8 +37,10 @@ public class RelatorioDeColaborador implements Relatorio {
         // Tarefas sob responsabilidade
         sb.append("\n--- Tarefas sob responsabilidade (").append(this.tarefas.size()).append(") ---\n");
         for (Tarefa t : this.tarefas) {
+            String projeto = this.projetoPorId.getOrDefault(t.getProjetoId(), "?");
             sb.append("- [").append(t.getStatus()).append("] ")
-              .append(t.getTitulo())
+              .append("Projeto: ").append(projeto)
+              .append(" | ").append(t.getTitulo())
               .append(" | Equipe: ").append(t.getEquipe().getNome())
               .append(" | Prioridade: ").append(t.getPrioridade())
               .append("\n");

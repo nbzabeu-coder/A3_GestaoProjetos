@@ -68,6 +68,11 @@ public class UsuarioDAO {
             }
 
         } catch (SQLException e) {
+            // 1062 = ER_DUP_ENTRY: violação de constraint UNIQUE (login/email/cpf)
+            if (e.getErrorCode() == 1062) {
+                throw new RuntimeException(
+                        "Já existe um usuário com esse login, e-mail ou CPF.", e);
+            }
             throw new RuntimeException("Erro ao inserir usuário", e);
         }
     }
@@ -119,25 +124,46 @@ public class UsuarioDAO {
     }
 
     // UPDATE: atualiza os dados de um usuário existente.
-    // Atributos imutáveis (cpf, login, perfil) NÃO são alterados aqui — só
-    // os que fazem sentido evoluir ao longo do tempo.
+    // Administrador pode editar TUDO (inclusive cpf/login/perfil) — a View
+    // garante via RBAC que só Admin chega aqui em modo editar.
     public void atualizar(Usuario usuario) {
-        String sql = "UPDATE usuario SET nome = ?, email = ?, cargo = ?, senha = ? WHERE id = ?";
+        String sql = "UPDATE usuario SET nome = ?, cpf = ?, email = ?, cargo = ?, "
+                + "login = ?, senha = ?, perfil = ? WHERE id = ?";
 
         try (Connection conn = ConexaoMySQL.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
 
+            // Detecta o perfil pelo tipo do objeto (mesmo padrão do inserir)
+            String perfil;
+            if (usuario instanceof Administrador) {
+                perfil = "ADMINISTRADOR";
+            } else if (usuario instanceof Gerente) {
+                perfil = "GERENTE";
+            } else if (usuario instanceof Colaborador) {
+                perfil = "COLABORADOR";
+            } else {
+                throw new IllegalArgumentException("Tipo de usuário desconhecido");
+            }
+
             // Preenche os campos atualizáveis
             ps.setString(1, usuario.getNome());
-            ps.setString(2, usuario.getEmail());
-            ps.setString(3, usuario.getCargo());
-            ps.setString(4, usuario.getSenha());
+            ps.setString(2, usuario.getCpf());
+            ps.setString(3, usuario.getEmail());
+            ps.setString(4, usuario.getCargo());
+            ps.setString(5, usuario.getLogin());
+            ps.setString(6, usuario.getSenha());
+            ps.setString(7, perfil);
             // O id na cláusula WHERE — identifica qual linha atualizar
-            ps.setInt(5, usuario.getId());
+            ps.setInt(8, usuario.getId());
 
             ps.executeUpdate();
 
         } catch (SQLException e) {
+            // 1062 = ER_DUP_ENTRY: violou UNIQUE (login/email/cpf de outro usuário)
+            if (e.getErrorCode() == 1062) {
+                throw new RuntimeException(
+                        "Já existe outro usuário com esse login, e-mail ou CPF.", e);
+            }
             throw new RuntimeException("Erro ao atualizar usuário", e);
         }
     }
@@ -153,6 +179,13 @@ public class UsuarioDAO {
             ps.executeUpdate();
 
         } catch (SQLException e) {
+            // 1451 = ER_ROW_IS_REFERENCED_2: existe FK apontando pra este usuário
+            // (é membro de equipe ou responsável por tarefa).
+            if (e.getErrorCode() == 1451) {
+                throw new RuntimeException(
+                        "Este usuário está vinculado a equipes ou tarefas e "
+                        + "não pode ser excluído.", e);
+            }
             throw new RuntimeException("Erro ao remover usuário", e);
         }
     }

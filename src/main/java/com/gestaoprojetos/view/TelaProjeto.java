@@ -114,7 +114,8 @@ public class TelaProjeto extends JDialog {
         boolean modoEditar = (projetoParaEditar != null);
         setTitle(modoEditar ? "Editar Projeto" : "Novo Projeto");
 
-        setSize(560, 460);
+        setSize(700, 640);
+        setMinimumSize(new java.awt.Dimension(620, 560));
         setLocationRelativeTo(pai);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout());
@@ -180,7 +181,7 @@ public class TelaProjeto extends JDialog {
         // CENTER: descrição (JTextArea com rolagem)
         JPanel painelDesc = new JPanel(new BorderLayout(5, 5));
         painelDesc.add(new JLabel("Descrição:"), BorderLayout.NORTH);
-        this.campoDescricao = new JTextArea(5, 20);
+        this.campoDescricao = new JTextArea(6, 30);
         this.campoDescricao.setLineWrap(true);
         this.campoDescricao.setWrapStyleWord(true);
         painelDesc.add(new JScrollPane(this.campoDescricao), BorderLayout.CENTER);

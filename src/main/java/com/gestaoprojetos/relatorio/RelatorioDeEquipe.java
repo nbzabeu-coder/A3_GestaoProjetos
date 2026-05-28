@@ -1,6 +1,7 @@
 package com.gestaoprojetos.relatorio;
 
 import java.util.List;
+import java.util.Map;
 
 import com.gestaoprojetos.model.Equipe;
 import com.gestaoprojetos.model.Usuario;
@@ -12,11 +13,17 @@ public class RelatorioDeEquipe implements Relatorio {
     private final Equipe equipe;
     private final List<Usuario> membros;
     private final List<Tarefa> tarefas;
+    // Map projetoId → nome do projeto: a tarefa só carrega projetoId (int);
+    // este map é montado pela View e passado pronto (mantém Opção A — relatório
+    // não acessa banco).
+    private final Map<Integer, String> projetoPorId;
 
-    public RelatorioDeEquipe(Equipe equipe, List<Usuario> membros, List<Tarefa> tarefas) {
+    public RelatorioDeEquipe(Equipe equipe, List<Usuario> membros,
+                              List<Tarefa> tarefas, Map<Integer, String> projetoPorId) {
         this.equipe = equipe;
         this.membros = membros;
         this.tarefas = tarefas;
+        this.projetoPorId = projetoPorId;
     }
 
     @Override
@@ -46,8 +53,10 @@ public class RelatorioDeEquipe implements Relatorio {
             String responsavel = (t.getResponsavel() != null)
                     ? t.getResponsavel().getNome()
                     : "(sem responsável)";
+            String projeto = this.projetoPorId.getOrDefault(t.getProjetoId(), "?");
             sb.append("- [").append(t.getStatus()).append("] ")
-              .append(t.getTitulo())
+              .append("Projeto: ").append(projeto)
+              .append(" | ").append(t.getTitulo())
               .append(" | Prioridade: ").append(t.getPrioridade())
               .append(" | Responsável: ").append(responsavel)
               .append("\n");

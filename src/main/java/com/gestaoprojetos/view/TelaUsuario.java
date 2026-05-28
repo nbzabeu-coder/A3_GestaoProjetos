@@ -235,9 +235,12 @@ public class TelaUsuario extends JDialog {
     // independente disso — são tratados em preencherCamposDoUsuario().
     private void definirEdicaoHabilitada(boolean habilitada) {
         this.campoNome.setEnabled(habilitada);
+        this.campoCpf.setEnabled(habilitada);
         this.campoEmail.setEnabled(habilitada);
         this.campoCargo.setEnabled(habilitada);
+        this.campoLogin.setEnabled(habilitada);
         this.campoSenha.setEnabled(habilitada);
+        this.comboPerfil.setEnabled(habilitada);
         this.botaoSalvar.setEnabled(habilitada);
         this.botaoEditar.setEnabled(!habilitada);
     }
@@ -254,12 +257,8 @@ public class TelaUsuario extends JDialog {
         // getClass().getSimpleName() devolve "Administrador"/"Gerente"/"Colaborador"
         // que casa exatamente com os itens do comboPerfil
         this.comboPerfil.setSelectedItem(u.getClass().getSimpleName());
-
-        // Desabilita os campos IMUTÁVEIS — o UsuarioDAO.atualizar() só persiste
-        // nome/email/cargo/senha; cpf/login/perfil são fixos depois de criados.
-        this.campoCpf.setEnabled(false);
-        this.campoLogin.setEnabled(false);
-        this.comboPerfil.setEnabled(false);
+        // Travamento dos campos é feito pelo definirEdicaoHabilitada(false)
+        // chamado em seguida (lock-to-edit). Admin pode editar TODOS os campos.
     }
 
     // ===== Ação do botão Salvar =====
@@ -289,13 +288,13 @@ public class TelaUsuario extends JDialog {
                         JOptionPane.INFORMATION_MESSAGE);
             } else {
                 // ===== MODO EDITAR =====
-                // Atualiza só os campos mutáveis no objeto que veio do banco.
-                // (cpf/login/perfil estão desabilitados no form — não mudam.)
-                this.usuarioEmEdicao.setNome(nome);
-                this.usuarioEmEdicao.setEmail(email);
-                this.usuarioEmEdicao.setCargo(cargo);
-                this.usuarioEmEdicao.setSenha(senha);
-                this.controller.atualizar(this.usuarioEmEdicao);
+                // Admin pode editar TUDO, inclusive o perfil. Como mudar o perfil
+                // implica trocar a subclasse de Usuario, reconstruímos o objeto
+                // pela factory (criarUsuarioComPerfil) e preservamos o id original.
+                Usuario atualizado = criarUsuarioComPerfil(
+                        nome, cpf, email, cargo, login, senha, perfil);
+                atualizado.setId(this.usuarioEmEdicao.getId());
+                this.controller.atualizar(atualizado);
 
                 JOptionPane.showMessageDialog(this,
                         "Usuário atualizado com sucesso!",

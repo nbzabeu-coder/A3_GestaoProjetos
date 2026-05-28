@@ -297,17 +297,23 @@ public class TelaDetalheTarefa extends JDialog {
         return painelBotoes;
     }
 
-    // Popula o combo de equipes conforme o modo:
-    // - criar: equipes alocadas ao projeto
-    // - editar: só a equipe da tarefa (imutável) — usa o objeto REAL da tarefa
+    // Popula o combo de equipes com TODAS as equipes alocadas ao projeto.
+    // Em modo editar, pré-seleciona a equipe atual da tarefa — o usuário pode
+    // trocar pra outra equipe do mesmo projeto (ex: responsabilidade migrou).
     private void carregarEquipes() {
-        if (this.tarefaEmEdicao == null) {
-            for (Equipe eq : this.projetoController.listarEquipes(this.projetoId)) {
-                this.comboEquipe.addItem(eq);
+        for (Equipe eq : this.projetoController.listarEquipes(this.projetoId)) {
+            this.comboEquipe.addItem(eq);
+        }
+        if (this.tarefaEmEdicao != null) {
+            // Seleciona a equipe atual da tarefa (compara por id, pois os objetos
+            // do combo vêm de uma consulta nova — não são o mesmo "this.equipe")
+            int idAtual = this.tarefaEmEdicao.getEquipe().getId();
+            for (int i = 0; i < this.comboEquipe.getItemCount(); i++) {
+                if (this.comboEquipe.getItemAt(i).getId() == idAtual) {
+                    this.comboEquipe.setSelectedIndex(i);
+                    break;
+                }
             }
-        } else {
-            this.comboEquipe.addItem(this.tarefaEmEdicao.getEquipe());
-            this.comboEquipe.setEnabled(false); // equipe não muda na edição
         }
     }
 
@@ -336,12 +342,13 @@ public class TelaDetalheTarefa extends JDialog {
         }
     }
 
-    // Alterna visualização/edição dos campos mutáveis. A equipe NÃO é tocada
-    // (imutável na edição, já desabilitada em carregarEquipes).
+    // Alterna visualização/edição de todos os campos mutáveis, inclusive a
+    // equipe (que pode ser trocada por outra alocada ao mesmo projeto).
     private void definirEdicaoHabilitada(boolean habilitada) {
         this.campoTitulo.setEnabled(habilitada);
         this.campoDataTermino.setEnabled(habilitada);
         this.comboPrioridade.setEnabled(habilitada);
+        this.comboEquipe.setEnabled(habilitada);
         this.comboResponsavel.setEnabled(habilitada);
         this.campoDescricao.setEnabled(habilitada);
         this.botaoSalvar.setEnabled(habilitada);
@@ -408,6 +415,9 @@ public class TelaDetalheTarefa extends JDialog {
                 this.tarefaEmEdicao.setDescricao(descricao);
                 this.tarefaEmEdicao.setDataTerminoPrevista(dataTermino);
                 this.tarefaEmEdicao.setPrioridade(prioridade);
+                // Equipe pode ter mudado — aplica antes do responsável pois
+                // a validação de responsável depende dos membros da equipe.
+                this.tarefaEmEdicao.setEquipe(equipe);
                 if (respSelecionado instanceof Usuario u) {
                     this.tarefaEmEdicao.atribuirResponsavel(u);
                 } else {

@@ -154,6 +154,17 @@ public class Tarefa {
         this.prioridade = prioridade;
     }
 
+    // Permite trocar a equipe da tarefa (ex: a responsabilidade migrou pra
+    // outra equipe do mesmo projeto). Quando a equipe muda, o responsável
+    // deve ser revalidado pra ser membro da nova equipe — a View cuida disso
+    // recarregando o combo de responsáveis.
+    public void setEquipe(Equipe equipe) {
+        if (equipe == null) {
+            throw new CampoObrigatorioException("Equipe é obrigatória");
+        }
+        this.equipe = equipe;
+    }
+
     // Métodos de negócio: alteram o estado da tarefa seguindo as regras do domínio.
     // Cada método valida se a operação é permitida no estado atual antes de
     // executar.

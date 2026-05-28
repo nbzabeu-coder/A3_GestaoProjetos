@@ -182,7 +182,7 @@ public class TarefaDAO {
         String sql = "UPDATE tarefa SET titulo = ?, descricao = ?, "
                 + "data_inicio_real = ?, data_termino_prevista = ?, "
                 + "data_termino_real = ?, status = ?, prioridade = ?, "
-                + "responsavel_id = ? WHERE id = ?";
+                + "equipe_id = ?, responsavel_id = ? WHERE id = ?";
 
         try (Connection conn = ConexaoMySQL.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -194,15 +194,16 @@ public class TarefaDAO {
             ps.setObject(5, tarefa.getDataTerminoReal());
             ps.setString(6, tarefa.getStatus().name());
             ps.setString(7, tarefa.getPrioridade().name());
+            ps.setInt(8, tarefa.getEquipe().getId());
 
             // responsavel_id pode ser null (responsável é opcional)
             if (tarefa.getResponsavel() != null) {
-                ps.setInt(8, tarefa.getResponsavel().getId());
+                ps.setInt(9, tarefa.getResponsavel().getId());
             } else {
-                ps.setNull(8, Types.INTEGER);
+                ps.setNull(9, Types.INTEGER);
             }
 
-            ps.setInt(9, tarefa.getId());
+            ps.setInt(10, tarefa.getId());
 
             ps.executeUpdate();
 

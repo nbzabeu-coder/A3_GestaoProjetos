@@ -29,9 +29,11 @@ import java.awt.Font;
 // (PriorityQueue) e listas (List/ArrayList) pra montar "Meus Projetos"
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.PriorityQueue;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Map;
 
 // Importando os Controllers — cada aba consulta o controller correspondente
 import com.gestaoprojetos.controller.UsuarioController;
@@ -106,15 +108,26 @@ public class TelaPrincipal extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
-        // ===== NORTH: saudação =====
-        // JPanel wrapper pra dar um respiro (padding) ao redor do label
-        JPanel painelSaudacao = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
+        // ===== NORTH: saudação + botão Sair =====
+        // BorderLayout pro topo: saudação centralizada, botão Sair à direita.
+        JPanel painelSaudacao = new JPanel(new BorderLayout(10, 10));
+        painelSaudacao.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
         JLabel labelSaudacao = new JLabel(
                 "Bem-vindo(a), " + this.usuarioLogado.getNome() + "!",
                 SwingConstants.CENTER);
         // Aumenta um pouco a fonte pra dar destaque ao header
         labelSaudacao.setFont(labelSaudacao.getFont().deriveFont(Font.BOLD, 16f));
-        painelSaudacao.add(labelSaudacao);
+        painelSaudacao.add(labelSaudacao, BorderLayout.CENTER);
+
+        JButton botaoSair = new JButton("Sair");
+        botaoSair.setToolTipText("Sair desta sessão e voltar à tela de login");
+        botaoSair.addActionListener(e -> sairDaSessao());
+        // Wrapper FlowLayout pra alinhar o botão à direita sem esticar
+        JPanel painelBotaoSair = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+        painelBotaoSair.add(botaoSair);
+        painelSaudacao.add(painelBotaoSair, BorderLayout.EAST);
+
         add(painelSaudacao, BorderLayout.NORTH);
 
         // ===== CENTER: JTabbedPane com as abas =====
@@ -136,7 +149,35 @@ public class TelaPrincipal extends JFrame {
         abas.addTab("Equipes", construirAbaEquipes());
         abas.addTab("Projetos", construirAbaProjetos());
         abas.addTab("Relatórios", construirAbaRelatorios());
+
+        // Refresca as abas dinâmicas (Início e Relatórios) ao serem selecionadas.
+        // Outras abas podem ter alterado dados (criar projeto, mudar status, etc.)
+        // que essas exibem — sem este listener elas ficariam mostrando estado antigo.
+        abas.addChangeListener(e -> {
+            int idx = abas.getSelectedIndex();
+            String titulo = abas.getTitleAt(idx);
+            if ("Início".equals(titulo)) {
+                abas.setComponentAt(idx, construirAbaInicio());
+            } else if ("Relatórios".equals(titulo)) {
+                popularEntidadesRelatorio();
+            }
+        });
+
         add(abas, BorderLayout.CENTER);
+    }
+
+    // Logout: confirma com o usuário, abre uma nova TelaLogin e dispõe esta.
+    // O app continua rodando (a nova TelaLogin é o único JFrame ativo).
+    private void sairDaSessao() {
+        int resp = JOptionPane.showConfirmDialog(this,
+                "Sair desta sessão e voltar à tela de login?",
+                "Confirmar saída",
+                JOptionPane.YES_NO_OPTION);
+        if (resp != JOptionPane.YES_OPTION) {
+            return;
+        }
+        new TelaLogin().setVisible(true);
+        this.dispose();
     }
 
     // ===== Métodos de construção das abas (stubs por enquanto — serão preenchidos nas fases B/C/D) =====
@@ -361,10 +402,11 @@ public class TelaPrincipal extends JFrame {
 
         // PERMISSÃO: Colaborador só visualiza equipes — Novo/Excluir desabilitados.
         // "Abrir" fica disponível (a TelaEquipe abre em modo leitura pra ele).
+        // Excluir equipe é operação destrutiva permanente — só Admin (TODO 8 item 3).
         boolean podeGerenciar = (this.usuarioLogado instanceof Administrador)
                 || (this.usuarioLogado instanceof Gerente);
         botaoNovo.setEnabled(podeGerenciar);
-        botaoExcluir.setEnabled(podeGerenciar);
+        botaoExcluir.setEnabled(this.usuarioLogado instanceof Administrador);
 
         painelBotoes.add(botaoNovo);
         painelBotoes.add(botaoAbrir);
@@ -708,12 +750,14 @@ public class TelaPrincipal extends JFrame {
                 this.relatorioAtual = new RelatorioDeEquipe(
                         eq,
                         this.equipeController.listarMembros(eq.getId()),
-                        this.tarefaController.listarPorEquipe(eq.getId()));
+                        this.tarefaController.listarPorEquipe(eq.getId()),
+                        construirMapaProjetos());
             } else { // Colaborador
                 Usuario u = (Usuario) entidade;
                 this.relatorioAtual = new RelatorioDeColaborador(
                         u,
-                        this.tarefaController.listarPorResponsavel(u.getId()));
+                        this.tarefaController.listarPorResponsavel(u.getId()),
+                        construirMapaProjetos());
             }
 
             // Polimorfismo: gerar() sem saber qual das 3 é
@@ -938,6 +982,17 @@ public class TelaPrincipal extends JFrame {
     }
 
     // Calcula porcentagem (parte/total) formatada como "xx.x%". Guarda divisão por zero.
+    // Constrói o mapa projetoId → nome do projeto, usado pelos relatórios de
+    // equipe/colaborador pra mostrar a qual projeto cada tarefa pertence
+    // (a Tarefa só carrega projetoId, não o objeto Projeto).
+    private Map<Integer, String> construirMapaProjetos() {
+        Map<Integer, String> mapa = new HashMap<>();
+        for (Projeto p : this.projetoController.listarTodos()) {
+            mapa.put(p.getId(), p.getNome());
+        }
+        return mapa;
+    }
+
     private String porcentagem(int parte, int total) {
         double pct = (total == 0) ? 0.0 : (parte * 100.0) / total;
         return String.format("%.1f%%", pct);

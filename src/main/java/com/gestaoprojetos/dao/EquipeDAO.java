@@ -142,6 +142,13 @@ public class EquipeDAO {
             ps.executeUpdate();
 
         } catch (SQLException e) {
+            // 1451 = ER_ROW_IS_REFERENCED_2: existe FK apontando pra esta equipe
+            // (tem membros, está alocada a projetos ou tem tarefas).
+            if (e.getErrorCode() == 1451) {
+                throw new RuntimeException(
+                        "Esta equipe está vinculada a projetos, membros ou "
+                        + "tarefas e não pode ser excluída.", e);
+            }
             throw new RuntimeException("Erro ao remover equipe", e);
         }
     }
