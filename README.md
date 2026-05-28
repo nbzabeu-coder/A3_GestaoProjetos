@@ -100,6 +100,17 @@ A primeira execução vai baixar as dependências (`mysql-connector-j` etc.) —
 
 ---
 
+## 📌 Sobre a pilha (estrutura não usada)
+
+As Metas do trabalho mencionam o uso de **pilhas, filas e listas**. No sistema usamos:
+
+- **Listas** (`List`/`ArrayList`) em todas as coleções do domínio (membros de equipes, equipes alocadas, tarefas de um projeto, etc.).
+- **Fila de prioridade** (`PriorityQueue`) na aba Início, ordenando as tarefas "a fazer" pela prioridade (ALTA → MEDIA → BAIXA).
+
+Para a **pilha** (LIFO — *Last In, First Out*), avaliamos o domínio e **não encontramos um uso natural**: projetos, equipes, tarefas e usuários são coleções onde a ordem de chegada não importa (listas) ou onde importa a prioridade (fila). Forçar uma pilha apenas para "marcar presença" seria artificial. Saber **quando não usar** uma estrutura também faz parte de bom projeto — registramos a decisão de forma consciente.
+
+---
+
 ## 📁 Estrutura do projeto
 
 ```
@@ -135,7 +146,7 @@ Os relatórios exportados ficam em `relatorios/` (criada automaticamente; gitign
 - [`design/diagrama-classes.md`](design/diagrama-classes.md) — modelo de domínio (herança `Usuario`, interface `Relatorio`, hierarquia de exceções).
 - [`design/fluxograma-autenticacao.md`](design/fluxograma-autenticacao.md) — o algoritmo de login em **três representações**: pseudocódigo, fluxograma e código Java.
 
-> 💡 Os diagramas Mermaid renderizam direto no GitHub e no preview do VS Code (`Cmd+Shift+V` no macOS).
+> 💡 Os diagramas Mermaid renderizam direto no GitHub e no preview do VS Code (`Cmd+Shift+V` no macOS · `Ctrl+Shift+V` no Windows e Linux).
 
 ---
 
