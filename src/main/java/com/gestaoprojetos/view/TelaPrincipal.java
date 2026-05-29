@@ -64,7 +64,8 @@ public class TelaPrincipal extends JFrame {
     // ===== Atributos =====
 
     // Usuário autenticado (preservado pra exibir saudação e, no futuro,
-    // decidir quais abas mostrar conforme permissões — TODO Fase 4)
+    // decidir quais abas mostrar conforme permissões — ver TODO 1
+    // em design/todos-de-evolucao.md)
     private Usuario usuarioLogado;
 
     // Controllers: instanciados no construtor, usados pelas abas pra
@@ -137,9 +138,10 @@ public class TelaPrincipal extends JFrame {
         // Aba Início (painel pessoal do usuário logado) — primeira aba
         abas.addTab("Início", construirAbaInicio());
 
-        // PERMISSÃO (versão básica via instanceof — TODO 1/8 prevê fazer isso
-        // como comportamento do domínio): a aba Usuários só aparece pra
-        // Administrador e Gerente. Colaborador não a vê.
+        // PERMISSÃO (versão básica via instanceof — ver TODO 1 em
+        // design/todos-de-evolucao.md prevê fazer isso como comportamento
+        // do domínio): a aba Usuários só aparece pra Administrador e Gerente.
+        // Colaborador não a vê.
         boolean podeVerUsuarios = (this.usuarioLogado instanceof Administrador)
                 || (this.usuarioLogado instanceof Gerente);
         if (podeVerUsuarios) {
@@ -402,7 +404,7 @@ public class TelaPrincipal extends JFrame {
 
         // PERMISSÃO: Colaborador só visualiza equipes — Novo/Excluir desabilitados.
         // "Abrir" fica disponível (a TelaEquipe abre em modo leitura pra ele).
-        // Excluir equipe é operação destrutiva permanente — só Admin (TODO 8 item 3).
+        // Excluir equipe é operação destrutiva permanente — só Admin.
         boolean podeGerenciar = (this.usuarioLogado instanceof Administrador)
                 || (this.usuarioLogado instanceof Gerente);
         botaoNovo.setEnabled(podeGerenciar);
