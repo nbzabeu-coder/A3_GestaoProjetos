@@ -7,7 +7,7 @@ import com.gestaoprojetos.model.Tarefa;
 
 // Interface Relatorio: o "contrato" que todo relatório do sistema deve cumprir.
 // Cada tipo de relatório (projeto, equipe, colaborador) implementa esses 2 métodos
-// do seu próprio jeito — isso é POLIMORFISMO: tratamos todos como "Relatorio",
+// do seu próprio jeito — isso é POLIMORFISMO: trato todos como "Relatorio",
 // mas cada um se monta diferente.
 public interface Relatorio {
 

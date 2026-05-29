@@ -38,7 +38,7 @@ import com.gestaoprojetos.model.Tarefa;
 import com.gestaoprojetos.exception.GestaoProjetosException;
 
 // TelaUsuario: JDialog MODAL pra criar ou editar um usuário do sistema.
-// - JDialog (não JFrame) porque queremos comportamento MODAL — bloqueia
+// - JDialog (não JFrame) porque quero comportamento MODAL — bloqueia
 //   a TelaPrincipal até o usuário decidir Salvar ou Cancelar.
 // - Construtor recebe um Usuario opcional:
 //     null      → modo CRIAR (form em branco)
@@ -289,8 +289,8 @@ public class TelaUsuario extends JDialog {
             } else {
                 // ===== MODO EDITAR =====
                 // Admin pode editar TUDO, inclusive o perfil. Como mudar o perfil
-                // implica trocar a subclasse de Usuario, reconstruímos o objeto
-                // pela factory (criarUsuarioComPerfil) e preservamos o id original.
+                // implica trocar a subclasse de Usuario, reconstruo o objeto
+                // pela factory (criarUsuarioComPerfil) e preservo o id original.
                 Usuario atualizado = criarUsuarioComPerfil(
                         nome, cpf, email, cargo, login, senha, perfil);
                 atualizado.setId(this.usuarioEmEdicao.getId());

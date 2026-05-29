@@ -374,7 +374,7 @@ public class TelaEquipe extends JDialog {
         try {
             for (Tarefa t : this.tarefaController.listarPorEquipe(this.equipeEmEdicao.getId())) {
                 // A Tarefa guarda só o projetoId (int), não o objeto Projeto.
-                // Buscamos o projeto pra exibir o NOME em vez do número.
+                // Busco o projeto pra exibir o NOME em vez do número.
                 Projeto projeto = this.projetoController.buscarPorId(t.getProjetoId());
                 String nomeProjeto = (projeto != null) ? projeto.getNome() : "—";
 

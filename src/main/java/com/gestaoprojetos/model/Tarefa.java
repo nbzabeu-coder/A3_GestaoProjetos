@@ -72,7 +72,7 @@ public class Tarefa {
     }
 
     // Getters: leem os valores dos atributos da tarefa.
-    // Alguns podem retornar null se ainda não foram preenchidos pois não incluímos
+    // Alguns podem retornar null se ainda não foram preenchidos pois não incluí
     // no construtor (ex: responsavel, dataInicioReal, dataTerminoReal)
     public int getId() {
         return this.id;

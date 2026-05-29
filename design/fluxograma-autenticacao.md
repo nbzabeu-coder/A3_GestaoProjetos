@@ -120,7 +120,7 @@ public Usuario autenticar(String login, String senha) {
 }
 ```
 
-> 💡 **Por segurança**, a mensagem de erro é genérica ("Login ou senha inválidos") — não dizemos *qual* dos dois falhou. No fluxograma isso aparece como **dois caminhos de "Não" levando à mesma saída** (`D -- Não` e `F -- Não` apontam pro mesmo bloco `E`).
+> 💡 **Por segurança**, a mensagem de erro é genérica ("Login ou senha inválidos") — a tela não revela *qual* dos dois falhou. No fluxograma isso aparece como **dois caminhos de "Não" levando à mesma saída** (`D -- Não` e `F -- Não` apontam pro mesmo bloco `E`).
 
 ---
 

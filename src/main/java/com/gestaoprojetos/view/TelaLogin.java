@@ -108,7 +108,7 @@ public class TelaLogin extends JFrame {
             // 1. Lê o que foi digitado nos campos
             String login = this.loginField.getText();
             // getPassword() retorna char[] (por segurança, em vez de String)
-            // — convertemos pra String pra passar ao controller
+            // — converto pra String pra passar ao controller
             String senha = new String(this.senhaField.getPassword());
 
             // 2. Pede ao controller que autentique

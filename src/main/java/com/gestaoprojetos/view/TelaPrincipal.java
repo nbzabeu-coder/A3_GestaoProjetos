@@ -190,7 +190,7 @@ public class TelaPrincipal extends JFrame {
         // ----- Modelo da tabela (read-only) -----
         // Colunas que vão aparecer no cabeçalho
         String[] colunas = {"ID", "Nome", "Login", "Perfil"};
-        // O '0' significa zero linhas iniciais — vamos preencher com carregarUsuarios()
+        // O '0' significa zero linhas iniciais — vou preencher com carregarUsuarios()
         // O override de isCellEditable trava a edição direta nas células
         this.modeloUsuarios = new DefaultTableModel(colunas, 0) {
             @Override
@@ -727,9 +727,9 @@ public class TelaPrincipal extends JFrame {
         }
     }
 
-    // Cria o relatório CERTO conforme o tipo (Opção A: passamos os dados prontos),
-    // gera o texto e mostra na tela. Aqui o POLIMORFISMO acontece: criamos uma das
-    // 3 implementações, mas a partir daí tratamos tudo como 'Relatorio'.
+    // Cria o relatório CERTO conforme o tipo (Opção A: passo os dados prontos),
+    // gera o texto e mostra na tela. Aqui o POLIMORFISMO acontece: crio uma das
+    // 3 implementações, mas a partir daí trato tudo como 'Relatorio'.
     private void gerarRelatorio() {
         String tipo = (String) this.comboTipoRelatorio.getSelectedItem();
         Object entidade = this.comboEntidadeRelatorio.getSelectedItem();

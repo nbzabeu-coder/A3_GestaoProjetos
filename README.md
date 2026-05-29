@@ -102,12 +102,12 @@ A primeira execução vai baixar as dependências (`mysql-connector-j` etc.) —
 
 ## 📌 Sobre a pilha (estrutura não usada)
 
-As Metas do trabalho mencionam o uso de **pilhas, filas e listas**. No sistema usamos:
+As Metas do trabalho mencionam o uso de **pilhas, filas e listas**. No sistema uso:
 
 - **Listas** (`List`/`ArrayList`) em todas as coleções do domínio (membros de equipes, equipes alocadas, tarefas de um projeto, etc.).
 - **Fila de prioridade** (`PriorityQueue`) na aba Início, ordenando as tarefas "a fazer" pela prioridade (ALTA → MEDIA → BAIXA).
 
-Para a **pilha** (LIFO — *Last In, First Out*), avaliamos o domínio e **não encontramos um uso natural**: projetos, equipes, tarefas e usuários são coleções onde a ordem de chegada não importa (listas) ou onde importa a prioridade (fila). Forçar uma pilha apenas para "marcar presença" seria artificial. Saber **quando não usar** uma estrutura também faz parte de bom projeto — registramos a decisão de forma consciente.
+Para a **pilha** (LIFO — *Last In, First Out*), avaliei o domínio e **não encontrei um uso natural**: projetos, equipes, tarefas e usuários são coleções onde a ordem de chegada não importa (listas) ou onde importa a prioridade (fila). Forçar uma pilha apenas para "marcar presença" seria artificial. Saber **quando não usar** uma estrutura também faz parte de bom projeto — registrei a decisão de forma consciente.
 
 ---
 
