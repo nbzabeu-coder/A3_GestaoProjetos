@@ -2,7 +2,7 @@
 -- Seed: dados de exemplo pra testes manuais
 -- gestao_projetos
 -- =====================================================
--- ATENÇÃO: senhas em texto puro (TODO Fase 4: hash com BCrypt)
+-- ATENÇÃO: senhas em texto puro (ver TODO 2 em design/todos-de-evolucao.md — hash com BCrypt)
 -- Este arquivo é IDEMPOTENTE: limpa as tabelas antes de inserir,
 -- então pode ser rodado várias vezes sem duplicar dados.
 -- =====================================================
